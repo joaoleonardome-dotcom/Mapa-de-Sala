@@ -2490,17 +2490,19 @@ function embaralharAlunos() {
   const livres = alunos.filter(a => a.tipo !== 'fixed');
   const vision = livres.filter(a => a.tipo === 'vision');
   const outros = livres.filter(a => a.tipo !== 'vision');
+  const totalAlunos = livres.length;
 
+  // Cadeiras livres (sem fixos), ordenadas fileira por fileira (frente → fundo)
   const cadeirasLivres = [];
   for (let i = 0; i < total; i++) { if (!novoMap[i]) cadeirasLivres.push(i); }
 
-  const frontSeats = shuffleArr(cadeirasLivres.filter(i => Math.floor(i / t.cols) < 2));
-  const backSeats  = shuffleArr(cadeirasLivres.filter(i => Math.floor(i / t.cols) >= 2));
-  shuffleArr(outros);
+  // Determinar quantas fileiras são necessárias para acomodar todos os alunos livres
+  // Preenche de frente para trás: só usa as primeiras N cadeiras necessárias
+  const cadeirasNecessarias = cadeirasLivres.slice(0, totalAlunos);
 
-  // Alunos a alocar: vision nas frentes, outros no resto
-  const aAlocar = [...vision, ...outros];
-  const cadeiras = [...frontSeats, ...backSeats];
+  // Dentro das cadeiras necessárias, separar frente (2 primeiras fileiras) e resto
+  const frontSeats = cadeirasNecessarias.filter(i => Math.floor(i / t.cols) < 2);
+  const backSeats  = cadeirasNecessarias.filter(i => Math.floor(i / t.cols) >= 2);
 
   // Tentativa com restrições (até 40 tentativas)
   let melhorMapa = null;
@@ -2508,21 +2510,21 @@ function embaralharAlunos() {
 
   for (let tentativa = 0; tentativa < 40; tentativa++) {
     const mapaTemp = { ...novoMap };
-    const cadTemp = shuffleArr([...cadeiras]);
     const visionTemp = shuffleArr([...vision]);
     const outrosTemp = shuffleArr([...outros]);
-    const frontTemp = shuffleArr([...frontSeats]);
-    const backTemp  = shuffleArr([...backSeats]);
+    const frontTemp  = shuffleArr([...frontSeats]);
+    const backTemp   = shuffleArr([...backSeats]);
 
-    // Alocar vision nas frentes
+    // Alocar vision nas frentes primeiro, depois no fundo se necessário
     let fi = 0, bi = 0;
     for (const a of visionTemp) {
       const seat = fi < frontTemp.length ? frontTemp[fi++] : backTemp[bi++];
       if (seat !== undefined) mapaTemp[seat] = a.id;
     }
-    // Alocar outros
-    const usados = new Set(Object.values(mapaTemp).filter(Boolean));
-    const restantes = cadTemp.filter(c => !Object.keys(mapaTemp).map(Number).includes(c));
+
+    // Alocar outros nas cadeiras restantes (frente → fundo)
+    const jaUsados = new Set(Object.keys(mapaTemp).map(Number));
+    const restantes = [...frontTemp, ...backTemp].filter(c => !jaUsados.has(c));
     let ri = 0;
     for (const a of outrosTemp) {
       if (ri < restantes.length) mapaTemp[restantes[ri++]] = a.id;
