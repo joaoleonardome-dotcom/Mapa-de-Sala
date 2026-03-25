@@ -1682,6 +1682,8 @@ function salvarAluno() {
   } else {
     state.alunos.push({ id: 'A' + Date.now() + Math.random().toString(36).slice(2), turmaId: novaTurmaId, nome, tipo: tipoAlunoAtual, obs, incomp: [...(window._incompAtual||[])] });
   }
+  // Sincronizar restrições bidirecionais
+  sincronizarIncomp();
   // Ordenar alunos alfabeticamente por turma
   state.alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   salvarStorage();
@@ -1690,6 +1692,20 @@ function salvarAluno() {
   renderTurmas();
   renderDashboard();
   toast('Aluno salvo! ✅');
+}
+
+function sincronizarIncomp() {
+  // Para cada aluno A que tem B na lista, garante que B também tem A
+  state.alunos.forEach(a => {
+    if (!a.incomp || !a.incomp.length) return;
+    a.incomp.forEach(bId => {
+      const b = state.alunos.find(x => x.id === bId);
+      if (b) {
+        if (!b.incomp) b.incomp = [];
+        if (!b.incomp.includes(a.id)) b.incomp.push(a.id);
+      }
+    });
+  });
 }
 
 function editarAluno(id) { abrirModalAluno(id); }
