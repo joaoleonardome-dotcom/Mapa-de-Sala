@@ -588,8 +588,8 @@
   }
   .prova-salas-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
     margin-top: 8px;
   }
   .prova-sala-card {
@@ -601,76 +601,78 @@
   .prova-sala-header {
     background: linear-gradient(135deg, var(--accent), var(--accent3));
     color: #fff;
-    padding: 14px 18px;
+    padding: 12px 18px;
     display: flex; align-items: center; justify-content: space-between;
   }
   .prova-sala-titulo {
     font-family: 'Sora', sans-serif;
-    font-size: 1rem; font-weight: 700;
+    font-size: 0.95rem; font-weight: 700;
   }
   .prova-sala-meta { font-size: 0.78rem; opacity: 0.85; }
-  .prova-sala-body { padding: 14px; }
-  .prova-grid {
-    display: grid;
-    gap: 7px;
+  .prova-sala-body { padding: 10px 14px; }
+  .prova-lista {
+    display: flex; flex-direction: column; gap: 4px;
   }
-  .prova-cadeira {
-    height: 68px;
-    border-radius: 12px;
-    border: 2px solid transparent;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
+  .prova-linha {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1.5px solid transparent;
     cursor: pointer;
-    transition: all 0.18s;
-    position: relative;
+    transition: all 0.15s;
+    font-size: 0.88rem;
     user-select: none;
-    font-size: 0.68rem; font-weight: 700;
-    text-align: center; padding: 0 4px;
-    line-height: 1.3;
   }
-  .prova-cadeira.empty {
-    background: var(--card-empty);
+  .prova-linha.occupied {
+    background: var(--surface2);
+    border-color: var(--border);
+  }
+  .prova-linha.occupied:hover {
+    border-color: var(--accent);
+    background: rgba(0,168,150,0.07);
+  }
+  .prova-linha.empty {
+    background: transparent;
     border-color: var(--border);
     border-style: dashed;
     cursor: default;
+    opacity: 0.5;
   }
-  .prova-cadeira.occupied {
-    background: linear-gradient(145deg, #c8ede8, #b0e0d8);
-    border-color: rgba(0,168,150,0.5);
-    box-shadow: 0 2px 8px rgba(0,168,150,0.12);
-  }
-  .prova-cadeira.occupied:hover {
+  .prova-linha.empty.drop-target {
     border-color: var(--accent);
-    transform: scale(1.04);
-    box-shadow: 0 4px 16px rgba(0,168,150,0.22);
+    background: rgba(0,168,150,0.06);
+    opacity: 1;
+    cursor: pointer;
   }
-  .prova-cadeira.prova-selecionada {
+  .prova-linha.prova-selecionada {
     border-color: var(--accent) !important;
-    border-style: solid !important;
-    box-shadow: 0 0 0 3px rgba(0,168,150,0.3) !important;
-    transform: scale(1.06) !important;
+    background: rgba(0,168,150,0.12) !important;
+    box-shadow: 0 0 0 2px rgba(0,168,150,0.25);
   }
-  .prova-cadeira-num {
-    position: absolute; top: 4px; left: 6px;
-    font-size: 0.58rem; color: var(--text3); font-weight: 700;
+  .prova-linha-num {
+    font-size: 0.72rem; font-weight: 700; color: var(--text3);
+    min-width: 22px; text-align: right; flex-shrink: 0;
   }
-  .prova-cadeira-turma {
-    position: absolute; bottom: 4px; right: 5px;
-    font-size: 0.55rem; font-weight: 800;
-    background: rgba(0,168,150,0.15); color: #007a6e;
-    border-radius: 4px; padding: 1px 4px;
+  .prova-linha-nome {
+    flex: 1; font-weight: 700; color: var(--text);
+  }
+  .prova-linha-turma {
+    font-size: 0.72rem; font-weight: 800;
+    background: rgba(0,168,150,0.12); color: #007a6e;
+    border-radius: 20px; padding: 2px 8px;
+    white-space: nowrap; flex-shrink: 0;
   }
   .prova-lousa {
     background: linear-gradient(135deg, #c8ede8, #a8ddd6);
     border: 2px solid rgba(0,168,150,0.4);
     border-radius: 6px;
-    padding: 7px 12px;
+    padding: 6px 12px;
     text-align: center;
     font-size: 0.72rem; font-weight: 700;
     color: #006a60;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .prova-sobra {
     background: var(--surface2);
@@ -683,9 +685,7 @@
     font-size: 0.78rem; font-weight: 800; color: var(--text2);
     text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;
   }
-  .prova-sobra-lista {
-    display: flex; flex-wrap: wrap; gap: 6px;
-  }
+  .prova-sobra-lista { display: flex; flex-wrap: wrap; gap: 6px; }
   .prova-chip {
     background: var(--surface); border: 1.5px solid var(--border);
     border-radius: 20px; padding: 4px 12px;
@@ -2655,11 +2655,10 @@ function provaSalaToggle(checkbox) {
 }
 
 function embaralharProva() {
-  const ano = provaState.anoSelecionado;
   const salaIds = provaState.salasSelecionadas;
-  if (!ano || !salaIds.length) return;
+  if (!provaState.anoSelecionado || !salaIds.length) return;
 
-  // Todos os alunos da série selecionada (de todas as turmas dessa série)
+  // Todos os alunos da série
   const turmasDaSerie = state.turmas.filter(t => extrairSerie(t.nome) === provaState.anoSelecionado);
   let todosAlunos = [];
   turmasDaSerie.forEach(t => {
@@ -2668,26 +2667,26 @@ function embaralharProva() {
       .forEach(a => todosAlunos.push({ ...a, turmaOrigem: t.nome }));
   });
 
-  // Separar fixos dos livres para embaralhar
-  const fixos = todosAlunos.filter(a => a.tipo === 'fixed');
-  const vision = todosAlunos.filter(a => a.tipo === 'vision');
-  const outros = todosAlunos.filter(a => a.tipo !== 'fixed' && a.tipo !== 'vision');
-
-  // Embaralhar livres
-  shuffleArr(vision);
-  shuffleArr(outros);
+  // Embaralhar
+  const vision = shuffleArr(todosAlunos.filter(a => a.tipo === 'vision'));
+  const outros = shuffleArr(todosAlunos.filter(a => a.tipo !== 'vision' && a.tipo !== 'fixed'));
+  const fixos  = todosAlunos.filter(a => a.tipo === 'fixed');
   const ordenados = [...vision, ...outros, ...fixos];
 
-  // Distribuir nas salas: preenche frente→fundo, sala por sala
+  // Distribuição HOMOGÊNEA: divide igualmente entre as salas
+  const totalAlunos = ordenados.length;
+  const numSalas = salaIds.length;
+  const porSala = Math.floor(totalAlunos / numSalas);
+  let resto = totalAlunos % numSalas; // primeiras salas recebem 1 a mais
+
   const novaAlocacao = {};
   salaIds.forEach(id => { novaAlocacao[id] = {}; });
 
   let alunoIdx = 0;
   for (const salaId of salaIds) {
-    const t = state.turmas.find(x => x.id === salaId);
-    if (!t) continue;
-    const total = t.cols * t.rows;
-    for (let seat = 0; seat < total && alunoIdx < ordenados.length; seat++) {
+    const qtd = porSala + (resto-- > 0 ? 1 : 0);
+    for (let seat = 0; seat < qtd; seat++) {
+      if (alunoIdx >= ordenados.length) break;
       novaAlocacao[salaId][seat] = ordenados[alunoIdx++];
     }
   }
@@ -2699,21 +2698,9 @@ function embaralharProva() {
   document.getElementById('prova-empty').style.display = 'none';
   document.getElementById('prova-resultado').style.display = 'block';
   document.getElementById('btn-limpar-prova').style.display = 'inline-flex';
+  document.getElementById('prova-sobra-wrap').style.display = 'none';
 
-  // Alunos sem sala
-  const sobra = ordenados.slice(alunoIdx);
-  const sobraWrap = document.getElementById('prova-sobra-wrap');
-  const sobraLista = document.getElementById('prova-sobra-lista');
-  if (sobra.length) {
-    sobraLista.innerHTML = sobra.map(a =>
-      `<span class="prova-chip">${escapeHtml(a.nome)} <span style="opacity:0.6;font-size:0.7rem">(${escapeHtml(a.turmaOrigem)})</span></span>`
-    ).join('');
-    sobraWrap.style.display = 'block';
-  } else {
-    sobraWrap.style.display = 'none';
-  }
-
-  toast(`✅ ${ordenados.length} alunos distribuídos em ${salaIds.length} sala(s)!`);
+  toast(`✅ ${totalAlunos} alunos distribuídos em ${numSalas} sala(s) — ~${porSala} por sala`);
 }
 
 function renderProvaResultado() {
@@ -2723,28 +2710,32 @@ function renderProvaResultado() {
   provaState.salasSelecionadas.forEach(salaId => {
     const t = state.turmas.find(x => x.id === salaId);
     if (!t) return;
-    const total = t.cols * t.rows;
     const alocacao = provaState.alocacao[salaId] || {};
-    const ocupados = Object.values(alocacao).filter(Boolean).length;
+    const alunos = Object.entries(alocacao).sort((a,b) => parseInt(a[0])-parseInt(b[0]));
+    const ocupados = alunos.length;
+    // Total de linhas = alunos + espaços vazios (mostra só até capacidade da sala)
+    const capSala = t.cols * t.rows;
+    const totalLinhas = Math.max(ocupados, Math.min(capSala, ocupados + 3)); // até 3 vazios visíveis
 
-    let cadeirasHtml = '';
-    for (let i = 0; i < total; i++) {
-      const aluno = alocacao[i];
-      if (aluno) {
-        const firstName = aluno.nome.split(' ')[0];
-        const lastName = aluno.nome.split(' ').slice(1).join(' ');
-        cadeirasHtml += `
-          <div class="prova-cadeira occupied" data-sala="${salaId}" data-seat="${i}"
-            onclick="provaClicarCadeira('${salaId}', ${i})">
-            <span class="prova-cadeira-num">${i+1}</span>
-            <strong>${escapeHtml(firstName)}</strong>${lastName ? ' '+escapeHtml(lastName) : ''}
-            <span class="prova-cadeira-turma">${escapeHtml(aluno.turmaOrigem)}</span>
+    let linhasHtml = '';
+    for (let i = 0; i < totalLinhas; i++) {
+      const entry = alunos[i];
+      if (entry) {
+        const [seatIdx, aluno] = entry;
+        linhasHtml += `
+          <div class="prova-linha occupied" data-sala="${salaId}" data-seat="${seatIdx}"
+            onclick="provaClicarLinha('${salaId}', ${seatIdx})">
+            <span class="prova-linha-num">${parseInt(seatIdx)+1}</span>
+            <span class="prova-linha-nome">${escapeHtml(aluno.nome)}</span>
+            <span class="prova-linha-turma">${escapeHtml(aluno.turmaOrigem)}</span>
           </div>`;
       } else {
-        cadeirasHtml += `
-          <div class="prova-cadeira empty" data-sala="${salaId}" data-seat="${i}"
-            onclick="provaClicarCadeira('${salaId}', ${i})">
-            <span class="prova-cadeira-num">${i+1}</span>
+        linhasHtml += `
+          <div class="prova-linha empty${provaTouchSel ? ' drop-target' : ''}"
+            data-sala="${salaId}" data-seat="${i}"
+            onclick="provaClicarLinha('${salaId}', ${i})">
+            <span class="prova-linha-num">${i+1}</span>
+            <span class="prova-linha-nome" style="color:var(--text3);font-weight:400">— vazio —</span>
           </div>`;
       }
     }
@@ -2754,52 +2745,71 @@ function renderProvaResultado() {
     card.innerHTML = `
       <div class="prova-sala-header">
         <div class="prova-sala-titulo">🏫 ${escapeHtml(t.nome)}</div>
-        <div class="prova-sala-meta">${ocupados}/${total} alunos</div>
+        <div class="prova-sala-meta">${ocupados} aluno(s)</div>
       </div>
       <div class="prova-sala-body">
         <div class="prova-lousa">⬛ LOUSA / QUADRO ⬛</div>
-        <div class="prova-grid" style="grid-template-columns:repeat(${t.cols},1fr)">${cadeirasHtml}</div>
+        <div class="prova-lista">${linhasHtml}</div>
       </div>`;
     grid.appendChild(card);
   });
 }
 
-function provaClicarCadeira(salaId, seatIdx) {
+function provaClicarLinha(salaId, seatIdx) {
   const alocacao = provaState.alocacao[salaId] || {};
   const aluno = alocacao[seatIdx] || null;
 
   if (!provaTouchSel) {
-    // Primeira seleção — precisa ter aluno
+    // Primeira seleção — só funciona em linhas com aluno
     if (!aluno) return;
-    provaTouchSel = { alunoId: aluno.id, turmaOrigem: aluno.turmaOrigem, fromSala: salaId, fromSeat: seatIdx };
-    // Destacar cadeira
-    document.querySelectorAll('.prova-cadeira, .prova-chip').forEach(el => el.classList.remove('prova-selecionada'));
-    const cel = document.querySelector(`.prova-cadeira[data-sala="${salaId}"][data-seat="${seatIdx}"]`);
-    if (cel) cel.classList.add('prova-selecionada');
-    toast(`👆 Toque no destino para mover ${aluno.nome.split(' ')[0]}`);
+    provaTouchSel = { fromSala: salaId, fromSeat: seatIdx };
+    // Destacar linha selecionada e mostrar vazios como drop-target
+    document.querySelectorAll('.prova-linha, .prova-chip').forEach(el => el.classList.remove('prova-selecionada'));
+    const linha = document.querySelector(`.prova-linha[data-sala="${salaId}"][data-seat="${seatIdx}"]`);
+    if (linha) linha.classList.add('prova-selecionada');
+    // Rerender para mostrar drop-targets nas linhas vazias
+    renderProvaResultado();
+    // Restaurar seleção visual após rerender
+    setTimeout(() => {
+      const l = document.querySelector(`.prova-linha[data-sala="${salaId}"][data-seat="${seatIdx}"]`);
+      if (l) l.classList.add('prova-selecionada');
+    }, 0);
+    toast(`👆 Clique no destino para mover ${aluno.nome.split(' ')[0]} — pode ser vazio ou trocar com outro`);
   } else {
-    // Segunda seleção — mover
     const { fromSala, fromSeat } = provaTouchSel;
-    const alunoMovendo = provaState.alocacao[fromSala][fromSeat];
 
+    // Mesma linha: cancelar
     if (fromSala === salaId && fromSeat === seatIdx) {
-      // Mesma cadeira: cancelar
       provaTouchSel = null;
-      document.querySelectorAll('.prova-cadeira, .prova-chip').forEach(el => el.classList.remove('prova-selecionada'));
+      renderProvaResultado();
       return;
     }
 
-    // Trocar (se destino ocupado, faz swap)
+    const alunoMovendo = provaState.alocacao[fromSala][fromSeat];
     const alunoDestino = provaState.alocacao[salaId]?.[seatIdx] || null;
-    provaState.alocacao[salaId][seatIdx] = alunoMovendo;
-    if (alunoDestino) {
-      provaState.alocacao[fromSala][fromSeat] = alunoDestino;
-    } else {
+
+    // Mover para vazio: só permite se a linha for realmente vazia
+    if (!alunoDestino) {
+      // Encontrar próximo índice livre na sala destino
+      const capDest = (state.turmas.find(x => x.id === salaId)?.cols || 6) *
+                      (state.turmas.find(x => x.id === salaId)?.rows || 5);
+      let novaSeat = seatIdx;
+      // Garante que o seat não está ocupado
+      if (provaState.alocacao[salaId][novaSeat]) {
+        // Procura próximo vazio
+        for (let s = 0; s < capDest; s++) {
+          if (!provaState.alocacao[salaId][s]) { novaSeat = s; break; }
+        }
+      }
+      provaState.alocacao[salaId][novaSeat] = alunoMovendo;
       delete provaState.alocacao[fromSala][fromSeat];
+    } else {
+      // Swap entre dois alunos
+      provaState.alocacao[salaId][seatIdx] = alunoMovendo;
+      provaState.alocacao[fromSala][fromSeat] = alunoDestino;
     }
 
     provaTouchSel = null;
-    document.querySelectorAll('.prova-cadeira, .prova-chip').forEach(el => el.classList.remove('prova-selecionada'));
     renderProvaResultado();
     toast(`✅ ${alunoMovendo.nome.split(' ')[0]} movido!`);
   }
@@ -2832,37 +2842,30 @@ function imprimirProva() {
       <div style="font-size:0.9rem;color:#00a896;font-weight:700;margin-top:4px">${escapeHtml(provaState.anoSelecionado)}</div>
       <div style="font-size:0.75rem;color:#8fa89e;margin-top:2px">Gerado em ${new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px">`;
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">`;
 
   provaState.salasSelecionadas.forEach(salaId => {
     const t = state.turmas.find(x => x.id === salaId);
     if (!t) return;
-    const total = t.cols * t.rows;
     const alocacao = provaState.alocacao[salaId] || {};
-    const ocupados = Object.values(alocacao).filter(Boolean).length;
+    const alunos = Object.entries(alocacao).sort((a,b) => parseInt(a[0])-parseInt(b[0]));
+    const ocupados = alunos.length;
 
-    let cadeirasHtml = '';
-    for (let i = 0; i < total; i++) {
-      const aluno = alocacao[i];
-      if (aluno) {
-        cadeirasHtml += `<div style="height:56px;border-radius:10px;background:linear-gradient(145deg,#c8ede8,#b0e0d8);border:1.5px solid rgba(0,168,150,0.4);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;text-align:center;padding:2px 4px;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-          <span style="position:absolute;top:3px;left:5px;font-size:0.5rem;color:#8fa89e">${i+1}</span>
-          <strong>${escapeHtml(aluno.nome.split(' ')[0])}</strong>${aluno.nome.split(' ').slice(1).join(' ') ? ' '+escapeHtml(aluno.nome.split(' ').slice(1).join(' ')) : ''}
-          <span style="font-size:0.52rem;background:rgba(0,168,150,0.15);color:#007a6e;border-radius:3px;padding:1px 4px;margin-top:2px">${escapeHtml(aluno.turmaOrigem)}</span>
-        </div>`;
-      } else {
-        cadeirasHtml += `<div style="height:56px;border-radius:10px;background:#ede7d6;border:1.5px dashed #c9bfa8"></div>`;
-      }
-    }
+    const linhasHtml = alunos.map(([seatIdx, aluno], i) =>
+      `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;background:${i%2===0?'#f5f0e8':'#fdf8f0'};border:1px solid #e4dcc8;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+        <span style="font-size:0.68rem;color:#8fa89e;font-weight:700;min-width:20px;text-align:right">${parseInt(seatIdx)+1}</span>
+        <span style="flex:1;font-size:0.82rem;font-weight:700;color:#2c3a35">${escapeHtml(aluno.nome)}</span>
+        <span style="font-size:0.68rem;font-weight:800;background:rgba(0,168,150,0.12);color:#007a6e;border-radius:20px;padding:2px 7px;white-space:nowrap">${escapeHtml(aluno.turmaOrigem)}</span>
+      </div>`
+    ).join('');
 
     html += `<div style="break-inside:avoid">
-      <div style="background:linear-gradient(135deg,#007f74,#00c9a7);color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center">
-        <strong style="font-size:0.9rem">${escapeHtml(t.nome)}</strong>
-        <span style="font-size:0.75rem;opacity:0.85">${ocupados}/${total}</span>
+      <div style="background:linear-gradient(135deg,#007f74,#00c9a7);color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+        <strong style="font-size:0.9rem">🏫 ${escapeHtml(t.nome)}</strong>
+        <span style="font-size:0.75rem;opacity:0.85">${ocupados} aluno(s)</span>
       </div>
-      <div style="border:1.5px solid #c9bfa8;border-top:none;border-radius:0 0 10px 10px;padding:12px">
-        <div style="background:linear-gradient(135deg,#c8ede8,#a8ddd6);border:1px solid rgba(0,168,150,0.3);border-radius:5px;padding:5px;text-align:center;font-size:0.65rem;font-weight:700;color:#006a60;letter-spacing:0.08em;margin-bottom:8px">⬛ LOUSA ⬛</div>
-        <div style="display:grid;grid-template-columns:repeat(${t.cols},1fr);gap:5px">${cadeirasHtml}</div>
+      <div style="border:1.5px solid #c9bfa8;border-top:none;border-radius:0 0 10px 10px;padding:10px;display:flex;flex-direction:column;gap:4px">
+        ${linhasHtml}
       </div>
     </div>`;
   });
