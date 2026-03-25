@@ -4,6 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MapaSala — Gerenciador de Turmas</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MapaSala">
+  <meta name="application-name" content="MapaSala">
+  <meta name="theme-color" content="#00a896">
+  <meta name="msapplication-TileColor" content="#00a896">
+  <meta name="msapplication-TileImage" content="icons/icon-192.png">
+
+  <!-- Ícones -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -177,51 +195,86 @@
   /* ─── TURMAS LIST ─── */
   .turmas-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 16px;
     margin-bottom: 20px;
   }
   .turma-card {
-    background: var(--surface2);
-    border: 2px solid var(--border);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: 20px 20px 16px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.22s;
     position: relative;
     overflow: hidden;
+    display: flex; flex-direction: column; gap: 10px;
   }
   .turma-card::before {
     content: '';
     position: absolute; top: 0; left: 0; right: 0; height: 3px;
     background: linear-gradient(90deg, var(--accent), var(--accent3));
+    opacity: 0.5; transition: opacity 0.2s;
   }
+  .turma-card:hover::before, .turma-card.selected::before { opacity: 1; }
   .turma-card:hover, .turma-card.selected {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,168,150,0.2), 0 8px 24px rgba(0,0,0,0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 0 0 3px rgba(0,168,150,0.12), 0 10px 30px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
   }
-  .turma-card.selected::before { background: linear-gradient(90deg, var(--accent), var(--accent3)); }
-  .turma-name { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
-  .turma-meta { font-size: 0.82rem; color: var(--text2); display: flex; gap: 12px; }
-  .turma-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; }
+  .turma-card-header { display: flex; align-items: flex-start; gap: 12px; }
+  .turma-avatar {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 800;
+    color: #fff;
+  }
+  .turma-info { flex: 1; min-width: 0; }
+  .turma-name { font-size: 1.05rem; font-weight: 800; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .turma-subtitle { font-size: 0.78rem; color: var(--text3); }
+  .turma-meta {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .turma-meta-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 10px;
+    font-size: 0.75rem; font-weight: 700; color: var(--text2);
+  }
+  .turma-progress-wrap { display: flex; align-items: center; gap: 8px; }
+  .turma-progress {
+    flex: 1; height: 5px; border-radius: 3px;
+    background: var(--surface3); overflow: hidden;
+  }
+  .turma-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 3px; transition: width 0.4s ease; }
+  .turma-progress-label { font-size: 0.72rem; font-weight: 700; color: var(--text3); white-space: nowrap; }
+  .turma-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; opacity: 0; transition: opacity 0.2s; }
   .turma-card:hover .turma-actions { opacity: 1; }
 
   /* ─── ALUNOS TABLE ─── */
-  .table-wrap { overflow-x: auto; border-radius: var(--radius-sm); }
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1.5px solid var(--border); }
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
   th {
-    background: var(--surface3);
-    padding: 12px 16px;
+    background: var(--surface2);
+    padding: 13px 16px;
     text-align: left;
-    font-size: 0.78rem; font-weight: 700;
+    font-size: 0.72rem; font-weight: 800;
     color: var(--text2);
-    text-transform: uppercase; letter-spacing: 0.06em;
+    text-transform: uppercase; letter-spacing: 0.08em;
     position: sticky; top: 0;
+    border-bottom: 2px solid var(--border);
   }
-  td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(0,168,150,0.05); }
+  tr:hover td { background: rgba(0,168,150,0.04); }
+  .aluno-avatar {
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.82rem; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    margin-right: 10px; vertical-align: middle;
+  }
+  .aluno-nome-cell { display: inline-flex; align-items: center; }
 
   /* Badges */
   .badge {
@@ -433,18 +486,19 @@
     z-index: 300; display: flex; flex-direction: column; gap: 10px;
   }
   .toast {
-    background: var(--surface2);
-    border: 1px solid var(--border);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-left: 4px solid var(--accent3);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 14px 18px;
-    font-size: 0.88rem; font-weight: 600;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    animation: slideIn 0.3s ease;
-    max-width: 320px;
+    font-size: 0.87rem; font-weight: 600;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s cubic-bezier(.22,.68,0,1.2);
+    max-width: 340px;
+    backdrop-filter: blur(8px);
   }
-  .toast.error { border-left-color: var(--accent2); }
-  @keyframes slideIn { from { opacity:0; transform: translateX(30px); } to { opacity:1; transform: translateX(0); } }
+  .toast.error { border-left-color: var(--accent2); background: rgba(255,240,240,0.95); }
+  @keyframes slideIn { from { opacity:0; transform: translateX(40px) scale(0.95); } to { opacity:1; transform: translateX(0) scale(1); } }
 
   /* ─── EMPTY STATE ─── */
   .empty-state {
@@ -466,15 +520,16 @@
 
   /* Seat info panel */
   .seat-panel {
-    background: var(--surface2);
-    border: 1px solid var(--border);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px 20px;
+    padding: 18px 20px;
     min-width: 220px;
     width: 100%;
     max-width: 320px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
   }
-  .seat-panel h4 { font-size: 0.8rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .seat-panel h4 { font-size: 0.75rem; font-weight: 800; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
 
   .mapa-container {
     display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; justify-content: center;
@@ -536,22 +591,30 @@
 
   /* ─── DASHBOARD ─── */
   .dash-boas-vindas {
-    background: linear-gradient(135deg, #00a896 0%, #00c9a7 50%, #00b88a 100%);
+    background: linear-gradient(135deg, #007f74 0%, #00a896 45%, #00c9a7 100%);
     border-radius: var(--radius);
-    padding: 28px 32px;
+    padding: 32px 36px;
     margin-bottom: 24px;
     color: #fff;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,168,150,0.28);
+  }
+  .dash-boas-vindas::before {
+    content: '';
+    position: absolute; right: -40px; top: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(255,255,255,0.07);
   }
   .dash-boas-vindas::after {
     content: '🗺️';
-    position: absolute; right: 24px; top: 50%;
+    position: absolute; right: 32px; top: 50%;
     transform: translateY(-50%);
-    font-size: 4rem; opacity: 0.2;
+    font-size: 5rem; opacity: 0.15;
   }
-  .dash-boas-vindas h2 { font-family: 'Sora', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
-  .dash-boas-vindas p { font-size: 0.9rem; opacity: 0.88; }
+  .dash-boas-vindas h2 { font-family: 'Sora', sans-serif; font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; text-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .dash-boas-vindas p { font-size: 0.92rem; opacity: 0.9; }
+  .dash-boas-vindas-data { font-size: 0.78rem; opacity: 0.7; margin-top: 8px; }
 
   .dash-stats {
     display: grid;
@@ -561,15 +624,25 @@
   }
   .stat-card {
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 20px;
-    text-align: center;
-    transition: all 0.2s;
+    padding: 20px 24px;
+    display: flex; align-items: center; gap: 16px;
+    transition: all 0.22s;
+    position: relative; overflow: hidden;
   }
-  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,168,150,0.12); }
-  .stat-num { font-family: 'Sora', sans-serif; font-size: 2rem; font-weight: 800; color: var(--accent); }
-  .stat-label { font-size: 0.8rem; color: var(--text2); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card::after {
+    content: ''; position: absolute; right: -12px; top: -12px;
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(0,168,150,0.06);
+    transition: transform 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,168,150,0.13); border-color: var(--accent); }
+  .stat-card:hover::after { transform: scale(1.5); }
+  .stat-icon { font-size: 1.8rem; flex-shrink: 0; }
+  .stat-body { flex: 1; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 2rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 0.75rem; color: var(--text2); font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
 
   .dash-section-title {
     font-family: 'Sora', sans-serif;
@@ -586,41 +659,55 @@
   }
   .dash-turma-item {
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius);
     padding: 16px 18px;
     cursor: pointer;
-    transition: all 0.2s;
-    display: flex; flex-direction: column; gap: 6px;
+    transition: all 0.22s;
+    display: flex; flex-direction: column; gap: 8px;
+    position: relative; overflow: hidden;
   }
-  .dash-turma-item:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,168,150,0.12); }
+  .dash-turma-item::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent3));
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .dash-turma-item:hover::before { opacity: 1; }
+  .dash-turma-item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,168,150,0.12); padding-left: 21px; }
   .dash-turma-item .dt-nome { font-weight: 800; font-size: 0.95rem; }
-  .dash-turma-item .dt-meta { font-size: 0.78rem; color: var(--text2); display: flex; gap: 10px; }
+  .dash-turma-item .dt-meta { font-size: 0.78rem; color: var(--text2); display: flex; gap: 10px; flex-wrap: wrap; }
   .dash-progress {
-    height: 4px; border-radius: 2px;
+    height: 5px; border-radius: 3px;
     background: var(--surface3);
-    margin-top: 6px; overflow: hidden;
+    overflow: hidden;
   }
-  .dash-progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+  .dash-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 3px; transition: width 0.5s ease; }
 
   .dash-atalhos {
     display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
   }
   .atalho-btn {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 10px;
     background: var(--surface);
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 20px;
+    padding: 14px 22px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.22s;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem; font-weight: 700;
+    font-size: 0.92rem; font-weight: 700;
     color: var(--text);
     flex: 1; min-width: 160px;
+    position: relative; overflow: hidden;
   }
-  .atalho-btn:hover { border-color: var(--accent); background: rgba(0,168,150,0.05); color: var(--accent); transform: translateY(-1px); }
-  .atalho-btn .ab-icon { font-size: 1.4rem; }
+  .atalho-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,168,150,0.06), transparent);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .atalho-btn:hover::before { opacity: 1; }
+  .atalho-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,168,150,0.12); }
+  .atalho-btn .ab-icon { font-size: 1.5rem; }
 
   /* ─── BUSCA GLOBAL ─── */
   .busca-wrap {
@@ -757,7 +844,14 @@
     <button class="tab-btn" onclick="showTab('alunos', event)">👥 Alunos</button>
     <button class="tab-btn" onclick="showTab('mapa', event)">🪑 Mapa</button>
   </div>
-  <div style="width:120px;display:flex;justify-content:flex-end">
+  <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;min-width:120px">
+    <button id="btn-instalar-pwa" style="display:none;align-items:center;gap:6px;
+      background:rgba(0,168,150,0.12);border:1.5px solid rgba(0,168,150,0.3);
+      color:var(--accent);border-radius:8px;padding:6px 12px;
+      font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;
+      transition:all 0.2s" title="Instalar como aplicativo">
+      📲 Instalar App
+    </button>
     <span id="status-conexao" style="font-size:0.75rem;font-weight:700;color:var(--text3)">⏳ Conectando…</span>
   </div>
 </header>
@@ -770,6 +864,7 @@
   <div class="dash-boas-vindas">
     <h2 id="dash-saudacao">Bom dia! 👋</h2>
     <p>Gerencie suas turmas, alunos e mapas de sala em um só lugar.</p>
+    <div class="dash-boas-vindas-data" id="dash-data"></div>
   </div>
 
   <!-- Busca global -->
@@ -782,20 +877,32 @@
   <!-- Stats -->
   <div class="dash-stats">
     <div class="stat-card">
-      <div class="stat-num" id="stat-turmas">0</div>
-      <div class="stat-label">🏫 Turmas</div>
+      <div class="stat-icon">🏫</div>
+      <div class="stat-body">
+        <div class="stat-num" id="stat-turmas">0</div>
+        <div class="stat-label">Turmas</div>
+      </div>
     </div>
     <div class="stat-card">
-      <div class="stat-num" id="stat-alunos">0</div>
-      <div class="stat-label">👥 Alunos</div>
+      <div class="stat-icon">👥</div>
+      <div class="stat-body">
+        <div class="stat-num" id="stat-alunos">0</div>
+        <div class="stat-label">Alunos</div>
+      </div>
     </div>
     <div class="stat-card">
-      <div class="stat-num" id="stat-alocados">0</div>
-      <div class="stat-label">🪑 Alocados</div>
+      <div class="stat-icon">🪑</div>
+      <div class="stat-body">
+        <div class="stat-num" id="stat-alocados">0</div>
+        <div class="stat-label">Alocados</div>
+      </div>
     </div>
     <div class="stat-card">
-      <div class="stat-num" id="stat-sem-assento">0</div>
-      <div class="stat-label">📋 Sem assento</div>
+      <div class="stat-icon">📋</div>
+      <div class="stat-body">
+        <div class="stat-num" id="stat-sem-assento">0</div>
+        <div class="stat-label">Sem assento</div>
+      </div>
     </div>
   </div>
 
@@ -904,9 +1011,17 @@
       <button class="btn btn-secondary" onclick="limparMapa()">🗑️ Limpar Mapa</button>
       <button class="btn btn-secondary" onclick="imprimirMapa()">🖨️ Imprimir Mapa</button>
       <span class="touch-hint">👆 Toque para selecionar, toque no destino para mover</span>
-      <span style="font-size:0.82rem;color:var(--text3);margin-left:8px" id="drag-hint-desktop">
+      <span style="font-size:0.82rem;color:var(--text3);margin-left:auto" id="drag-hint-desktop">
         💡 Arraste os alunos entre as cadeiras
       </span>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <span style="font-size:0.72rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;align-self:center">Legenda:</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--text2)"><span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(145deg,#c8ede8,#b0e0d8);display:inline-block;border:1px solid rgba(0,168,150,0.4)"></span>Normal</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--text2)"><span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(145deg,#fce8e8,#f8d4d4);display:inline-block;border:1px solid rgba(224,92,92,0.4)"></span>🔒 Laudo/Fixo</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--text2)"><span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(145deg,#c8f0e0,#b0e8d0);display:inline-block;border:1px solid rgba(0,184,138,0.4)"></span>👁️ Visão</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--text2)"><span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(145deg,#fce8c8,#f8dab0);display:inline-block;border:1px solid rgba(212,137,26,0.4)"></span>💛 Concentração</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:#b83a3a"><span style="width:14px;height:14px;border-radius:4px;background:var(--card-empty);display:inline-block;border:2px solid #e05c5c;outline:2px solid rgba(224,92,92,0.4);outline-offset:1px"></span>⚠️ Restrição violada</span>
     </div>
 
     <div class="mapa-container">
@@ -1180,7 +1295,7 @@ function showTab(name, ev) {
   document.getElementById('tab-' + name).classList.add('active');
   const btn = ev ? ev.currentTarget : document.querySelector(`.tab-btn[onclick*="'${name}'"]`);
   if (btn) btn.classList.add('active');
-  if (name === 'mapa') { turmaSelecionada = null; renderSelectTurmaMapa(); renderMapa(); }
+  if (name === 'mapa') { renderSelectTurmaMapa(); renderMapa(); }
   if (name === 'turmas') renderTurmas();
   if (name === 'dashboard') renderDashboard();
 }
@@ -1220,6 +1335,11 @@ function renderDashboard() {
   const h = new Date().getHours();
   const saud = h < 12 ? 'Bom dia! 👋' : h < 18 ? 'Boa tarde! 👋' : 'Boa noite! 👋';
   document.getElementById('dash-saudacao').textContent = saud;
+  const dataEl = document.getElementById('dash-data');
+  if (dataEl) {
+    const now = new Date();
+    dataEl.textContent = now.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  }
 
   // Stats
   const totalAlunos = state.alunos.length;
@@ -1249,7 +1369,7 @@ function renderDashboard() {
         <span>👥 ${alunos}</span>
         <span>🪑 ${alocados}/${total}</span>
       </div>
-      ${t.disciplina ? `<div style="font-size:0.75rem;color:var(--text3)">📚 ${t.disciplina}</div>` : ''}
+      ${t.disciplina ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:2px">🧑‍🏫 Orientador: ${t.disciplina}</div>` : ''}
       <div class="dash-progress"><div class="dash-progress-bar" style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
@@ -1334,6 +1454,11 @@ function irParaAluno(alunoId, turmaId) {
 // ═══════════════════════════════════════════
 const tooltip = document.getElementById('cadeira-tooltip');
 let tooltipTimer = null;
+
+function mostrarTooltipById(ev, alunoId, seatIdx) {
+  const aluno = state.alunos.find(a => a.id === alunoId);
+  if (aluno) mostrarTooltip(ev, aluno, seatIdx);
+}
 
 function mostrarTooltip(ev, aluno, seatIdx) {
   clearTimeout(tooltipTimer);
@@ -1424,23 +1549,37 @@ function renderTurmas() {
     grid.innerHTML = ''; empty.style.display = 'block'; return;
   }
   empty.style.display = 'none';
-  grid.innerHTML = state.turmas.map(t => {
+  const turmaColors = ['#00a896','#e05c5c','#d4891a','#6c63ff','#e91e8c','#00b88a'];
+  grid.innerHTML = state.turmas.map((t, idx) => {
     const alunosCt = state.alunos.filter(a => a.turmaId === t.id).length;
     const totalSeats = t.cols * t.rows;
     const ocupados = Object.values(state.assentos[t.id] || {}).filter(v => v !== null).length;
+    const pct = totalSeats > 0 ? Math.round((ocupados / totalSeats) * 100) : 0;
+    const cor = turmaColors[idx % turmaColors.length];
+    const inicial = t.nome.charAt(0).toUpperCase();
+    const incompCt = state.alunos.filter(a => a.turmaId === t.id && a.incomp && a.incomp.length > 0).length;
     return `
     <div class="turma-card ${turmaSelecionada===t.id?'selected':''}" onclick="selecionarTurma('${t.id}')">
       <div class="turma-actions">
         <button class="btn btn-sm btn-secondary btn-icon" onclick="editarTurma('${t.id}',event)" title="Editar">✏️</button>
         <button class="btn btn-sm btn-danger btn-icon" onclick="excluirTurma('${t.id}',event)" title="Excluir">🗑️</button>
       </div>
-      <div class="turma-name">${t.nome}</div>
-      <div class="turma-meta">
-        <span>📐 ${t.cols}×${t.rows}</span>
-        <span>👥 ${alunosCt} alunos</span>
-        <span>🪑 ${ocupados}/${totalSeats}</span>
+      <div class="turma-card-header">
+        <div class="turma-avatar" style="background:linear-gradient(135deg,${cor}dd,${cor}99)">${inicial}</div>
+        <div class="turma-info">
+          <div class="turma-name">${t.nome}</div>
+          <div class="turma-subtitle">${t.disciplina ? '🧑‍🏫 '+t.disciplina+' ' : ''}${t.ano ? '· '+t.ano : ''}</div>
+        </div>
       </div>
-      ${t.disciplina ? `<div style="font-size:0.78rem;color:var(--text3);margin-top:6px">📚 ${t.disciplina} ${t.ano?'· '+t.ano:''}</div>` : ''}
+      <div class="turma-meta">
+        <span class="turma-meta-pill">📐 ${t.cols}×${t.rows}</span>
+        <span class="turma-meta-pill">👥 ${alunosCt} alunos</span>
+        ${incompCt > 0 ? `<span class="turma-meta-pill" style="color:#b83a3a;background:rgba(224,92,92,0.1);border-color:rgba(224,92,92,0.2)">⚠️ ${incompCt} restr.</span>` : ''}
+      </div>
+      <div class="turma-progress-wrap">
+        <div class="turma-progress"><div class="turma-progress-bar" style="width:${pct}%"></div></div>
+        <span class="turma-progress-label">${ocupados}/${totalSeats} cadeiras</span>
+      </div>
     </div>`;
   }).join('');
 }
@@ -1507,13 +1646,8 @@ function excluirTurma(id, ev) {
 
 function selecionarTurma(id) {
   turmaSelecionada = id;
-  renderTurmas();
+  showTabDireto('alunos');
   atualizarPainelAlunos();
-  // auto-navegar para alunos
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn')[1].classList.add('active');
-  document.getElementById('tab-alunos').classList.add('active');
 }
 
 // ═══════════════════════════════════════════
@@ -1547,19 +1681,35 @@ function renderAlunos() {
   const seats = state.assentos[turmaSelecionada] || {};
   const labels = { normal: 'Normal', fixed: 'Laudo/Fixo', vision: 'Visão', conc: 'Concentração' };
   const badgeCls = { normal: 'badge-normal', fixed: 'badge-fixed', vision: 'badge-vision', conc: 'badge-conc' };
+  const avatarColors = ['#00a896','#6c63ff','#e05c5c','#d4891a','#e91e8c','#00b88a','#0288d1'];
   tbody.innerHTML = alunos.map((a, i) => {
     let assento = '—';
     for (let [si, aid] of Object.entries(seats)) { if (aid === a.id) { assento = 'Cadeira ' + (parseInt(si)+1); break; } }
+    const cor = avatarColors[i % avatarColors.length];
+    const ini = a.nome.charAt(0).toUpperCase();
+    const incompCt = (a.incomp||[]).length;
     return `<tr>
-      <td style="color:var(--text3);font-weight:700">${i+1}</td>
-      <td><strong>${a.nome}</strong></td>
+      <td style="color:var(--text3);font-weight:700;width:36px">${i+1}</td>
+      <td>
+        <div class="aluno-nome-cell">
+          <span class="aluno-avatar" style="background:linear-gradient(135deg,${cor}dd,${cor}88)">${ini}</span>
+          <div>
+            <div style="font-weight:700">${a.nome}</div>
+            ${incompCt > 0 ? `<div style="font-size:0.72rem;color:#b83a3a">⚠️ ${incompCt} restrição(ões)</div>` : ''}
+          </div>
+        </div>
+      </td>
       <td><span class="badge ${badgeCls[a.tipo]||'badge-normal'}">${labels[a.tipo]||a.tipo}</span></td>
-      <td style="color:var(--text2);font-size:0.82rem">${a.obs||'—'}</td>
-      <td style="font-size:0.82rem;color:var(--text2)">${assento}</td>
+      <td style="color:var(--text2);font-size:0.82rem;max-width:200px">${a.obs||'<span style="opacity:0.4">—</span>'}</td>
+      <td>
+        ${assento !== '—'
+          ? `<span style="background:rgba(0,168,150,0.1);color:#007a6e;border-radius:20px;padding:3px 10px;font-size:0.78rem;font-weight:700">🪑 ${assento}</span>`
+          : `<span style="color:var(--text3);font-size:0.82rem">Sem assento</span>`}
+      </td>
       <td>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-sm btn-secondary" onclick="editarAluno('${a.id}')">✏️</button>
-          <button class="btn btn-sm btn-danger" onclick="excluirAluno('${a.id}')">🗑️</button>
+          <button class="btn btn-sm btn-secondary" onclick="editarAluno('${a.id}')" title="Editar">✏️ Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirAluno('${a.id}')" title="Excluir">🗑️</button>
         </div>
       </td>
     </tr>`;
@@ -1677,12 +1827,20 @@ function salvarAluno() {
         }
         a.turmaId = novaTurmaId;
       }
-      a.nome = nome; a.tipo = tipoAlunoAtual; a.obs = obs; a.incomp = [...(window._incompAtual||[])];
+      const incompAnterior = a.incomp || [];
+      const incompNovo = [...(window._incompAtual||[])];
+      // Remover do lado oposto as restrições que foram excluídas
+      const removidos = incompAnterior.filter(id => !incompNovo.includes(id));
+      removidos.forEach(bId => {
+        const b = state.alunos.find(x => x.id === bId);
+        if (b && b.incomp) b.incomp = b.incomp.filter(x => x !== editId);
+      });
+      a.nome = nome; a.tipo = tipoAlunoAtual; a.obs = obs; a.incomp = incompNovo;
     }
   } else {
     state.alunos.push({ id: 'A' + Date.now() + Math.random().toString(36).slice(2), turmaId: novaTurmaId, nome, tipo: tipoAlunoAtual, obs, incomp: [...(window._incompAtual||[])] });
   }
-  // Sincronizar restrições bidirecionais
+  // Sincronizar restrições bidirecionais (adicionar no lado oposto)
   sincronizarIncomp();
   // Ordenar alunos alfabeticamente por turma
   state.alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
@@ -1921,7 +2079,7 @@ function renderMapa() {
         ondragleave="dragLeave(event)"
         ondrop="dragDrop(event,${i})"
         ondragend="dragEnd(event)"
-        onmouseenter="mostrarTooltip(event,${JSON.stringify(aluno).replace(/"/g,'&quot;')},${i})"
+        onmouseenter="mostrarTooltipById(event,'${alunoId}',${i})"
         onmousemove="posicionarTooltip(event)"
         onmouseleave="ocultarTooltip()"
         onclick="if(handleTouchCadeira(${i}))return; abrirMenuCadeira(${i})"
@@ -2267,5 +2425,68 @@ atualizarPainelAlunos();
 // Iniciar sincronização Firebase (aguarda SDK carregar)
 setTimeout(iniciarSyncFirebase, 800);
 </script>
+
+<script>
+// ─── PWA: SERVICE WORKER ───
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.warn('SW erro:', err));
+  });
+}
+
+// ─── PWA: PROMPT DE INSTALAÇÃO ───
+let deferredPrompt = null;
+const btnInstalar = document.getElementById('btn-instalar-pwa');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (btnInstalar) {
+    btnInstalar.style.display = 'inline-flex';
+    btnInstalar.addEventListener('click', async () => {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        btnInstalar.style.display = 'none';
+        toast('App instalado com sucesso! 🎉');
+      }
+      deferredPrompt = null;
+    });
+  }
+});
+
+// Quando já está instalado, esconde o botão
+window.addEventListener('appinstalled', () => {
+  if (btnInstalar) btnInstalar.style.display = 'none';
+  deferredPrompt = null;
+});
+
+// iOS: mostrar instrução manual se necessário
+const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+const isInStandaloneMode = window.navigator.standalone;
+if (isIos && !isInStandaloneMode) {
+  setTimeout(() => {
+    const banner = document.getElementById('ios-install-banner');
+    if (banner) banner.style.display = 'flex';
+  }, 3000);
+}
+</script>
+
+<!-- Banner iOS install -->
+<div id="ios-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
+  background:var(--surface);border-top:1.5px solid var(--border);
+  padding:14px 20px;align-items:center;gap:12px;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.12)">
+  <img src="icons/icon-192.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0">
+  <div style="flex:1;font-size:0.85rem">
+    <strong>Instalar MapaSala</strong><br>
+    <span style="color:var(--text2)">Toque em <strong>⎙</strong> e depois <strong>"Adicionar à Tela de Início"</strong></span>
+  </div>
+  <button onclick="document.getElementById('ios-install-banner').style.display='none'"
+    style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text3);padding:4px">✕</button>
+</div>
+
 </body>
 </html>
