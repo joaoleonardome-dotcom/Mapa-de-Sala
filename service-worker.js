@@ -1,65 +1,114 @@
-// MapaSala Service Worker v1.0
-const CACHE_NAME = 'mapasala-v1';
+// ═══════════════════════════════════════════
+// MapaSala — Service Worker
+// Estratégia: Cache First com fallback de rede
+// ═══════════════════════════════════════════
+
+const CACHE_NAME = 'mapasala-v2';
+
+// Arquivos essenciais para funcionamento offline
 const ASSETS = [
+  './',
   './index.html',
   './manifest.json',
+  './icons/icon.svg',
+  './icons/icon-16.png',
+  './icons/icon-32.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+  './icons/apple-touch-icon.png',
+  // Fontes e libs externas (cache on first use)
 ];
 
-// Instalar e cachear assets principais
+// Recursos externos que também queremos cachear
+const EXTERNAL = [
+  'https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+];
+
+// ─── INSTALL: pré-cacheia os assets locais ───
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS.map(url => {
-        // Tentar cachear, ignorar erros de CORS em recursos externos
-        return fetch(url).then(res => {
-          if (res.ok) return cache.put(url, res);
-        }).catch(() => {});
-      }));
-    }).then(() => self.skipWaiting())
+      // Cacheia locais garantidos
+      return cache.addAll(ASSETS).catch(err => {
+        console.warn('[SW] Alguns assets não puderam ser cacheados:', err);
+      });
+    })
   );
+  self.skipWaiting();
 });
 
-// Ativar e limpar caches antigos
+// ─── ACTIVATE: remove caches antigos ───
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+      Promise.all(
+        keys
+          .filter(k => k !== CACHE_NAME)
+          .map(k => {
+            console.log('[SW] Removendo cache antigo:', k);
+            return caches.delete(k);
+          })
+      )
+    )
   );
+  self.clients.claim();
 });
 
-// Estratégia: Cache First para assets, Network First para Firebase
+// ─── FETCH: Cache First para locais, Network First para Firebase ───
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Firebase e APIs externas: sempre tenta rede primeiro
-  if (url.hostname.includes('firebase') || url.hostname.includes('googleapis.com')) {
+  // Ignorar requisições do Firebase (sempre precisam de rede)
+  if (
+    url.hostname.includes('firebaseio.com') ||
+    url.hostname.includes('firebase.googleapis.com') ||
+    url.hostname.includes('firebasejs') ||
+    url.hostname.includes('gstatic.com')
+  ) {
+    return; // deixa o browser resolver normalmente
+  }
+
+  // Para navegação (HTML) usa Network First para sempre ter versão atualizada
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match('./index.html'))
     );
     return;
   }
 
-  // Assets locais e fontes: cache first
+  // Para todo o resto: Cache First com fallback de rede
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
-      return fetch(event.request).then(res => {
-        if (res && res.status === 200 && res.type !== 'opaque') {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+
+      return fetch(event.request).then(response => {
+        // Só cacheia respostas válidas
+        if (!response || response.status !== 200 || response.type === 'error') {
+          return response;
         }
-        return res;
-      }).catch(() => caches.match('./index.html'));
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      }).catch(() => {
+        // Fallback para ícone SVG se imagem não disponível
+        if (event.request.destination === 'image') {
+          return caches.match('./icons/icon.svg');
+        }
+      });
     })
   );
 });
 
-// Mensagem para forçar atualização do cache
+// ─── MENSAGENS (ex: forçar atualização) ───
 self.addEventListener('message', event => {
-  if (event.data === 'skipWaiting') self.skipWaiting();
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

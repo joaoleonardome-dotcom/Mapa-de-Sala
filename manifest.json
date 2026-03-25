@@ -1,14 +1,14 @@
 {
   "name": "MapaSala — Gerenciador de Turmas",
   "short_name": "MapaSala",
-  "description": "Gerencie turmas, alunos e mapas de sala com facilidade.",
+  "description": "Gerencie turmas, alunos e mapas de sala de forma simples e visual.",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#00a896",
+  "background_color": "#f5f0e8",
   "theme_color": "#00a896",
   "lang": "pt-BR",
-  "categories": ["education", "productivity"],
+  "scope": "./",
   "icons": [
     {
       "src": "icons/icon-16.png",
@@ -31,21 +31,33 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ],
   "screenshots": [],
+  "categories": ["education", "productivity"],
   "shortcuts": [
     {
       "name": "Nova Turma",
       "short_name": "Nova Turma",
       "description": "Criar uma nova turma",
-      "url": "./index.html#nova-turma",
+      "url": "./index.html#turmas",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Ver Mapa",
       "short_name": "Mapa",
-      "description": "Abrir o mapa de sala",
+      "description": "Abrir mapa de sala",
       "url": "./index.html#mapa",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }

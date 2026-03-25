@@ -801,17 +801,26 @@
 
   /* ─── IMPRESSÃO ─── */
   @media print {
+    body {
+      margin: 0;
+      padding: 0;
+      height: auto;
+      overflow: hidden;
+    }
     body * { visibility: hidden; }
     #area-impressao, #area-impressao * { visibility: visible; }
     #area-impressao {
-      position: fixed; inset: 0;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: auto;
       background: #fff;
       display: flex; flex-direction: column; align-items: center;
       justify-content: flex-start;
       padding: 24px;
       z-index: 9999;
+      page-break-after: avoid;
     }
     .cadeira { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { margin: 10mm; size: auto; }
   }
 </style>
 </head>
@@ -1007,14 +1016,6 @@
       <span style="font-size:0.82rem;color:var(--text3);margin-left:auto" id="drag-hint-desktop">
         💡 Arraste os alunos entre as cadeiras
       </span>
-    </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)">
-      <span style="font-size:0.72rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;align-self:center">Legenda:</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--text2)"><span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(145deg,#c8ede8,#b0e0d8);display:inline-block;border:1px solid rgba(0,168,150,0.4)"></span>Normal</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--text2)"><span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(145deg,#fce8e8,#f8d4d4);display:inline-block;border:1px solid rgba(224,92,92,0.4)"></span>🔒 Laudo/Fixo</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--text2)"><span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(145deg,#c8f0e0,#b0e8d0);display:inline-block;border:1px solid rgba(0,184,138,0.4)"></span>👁️ Visão</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--text2)"><span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(145deg,#fce8c8,#f8dab0);display:inline-block;border:1px solid rgba(212,137,26,0.4)"></span>💛 Concentração</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:#b83a3a"><span style="width:14px;height:14px;border-radius:4px;background:var(--card-empty);display:inline-block;border:2px solid #e05c5c;outline:2px solid rgba(224,92,92,0.4);outline-offset:1px"></span>⚠️ Restrição violada</span>
     </div>
 
     <div class="mapa-container">
