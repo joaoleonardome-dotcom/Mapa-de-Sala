@@ -17,7 +17,6 @@
   <meta name="msapplication-TileImage" content="icons/icon-192.png">
 
   <!-- Ícones -->
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
@@ -718,7 +717,7 @@
     background: var(--surface);
     border: 2px solid var(--border);
     border-radius: 40px;
-    padding: 12px 20px 12px 48px;
+    padding: 12px 20px;
     font-size: 0.95rem;
     color: var(--text);
     font-family: 'Nunito', sans-serif;
@@ -726,11 +725,6 @@
     transition: all 0.2s;
   }
   .busca-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,168,150,0.15); }
-  .busca-icon {
-    position: absolute; left: 16px; top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.1rem; pointer-events: none;
-  }
   .busca-resultados {
     position: absolute; top: calc(100% + 6px); left: 0; right: 0;
     background: var(--surface);
@@ -869,8 +863,7 @@
 
   <!-- Busca global -->
   <div class="busca-wrap">
-    <span class="busca-icon">🔍</span>
-    <input class="busca-input" type="text" id="busca-global" placeholder="Buscar aluno por nome…" oninput="buscaGlobal(this.value)" onblur="setTimeout(()=>fecharBusca(),200)">
+    <input class="busca-input" type="text" id="busca-global" placeholder="🔍  Buscar aluno por nome…" oninput="buscaGlobal(this.value)" onblur="setTimeout(()=>fecharBusca(),200)">
     <div class="busca-resultados" id="busca-resultados"></div>
   </div>
 
@@ -1177,6 +1170,20 @@
   </div>
 </div>
 
+<!-- MODAL: CONFIRMAÇÃO CUSTOMIZADA -->
+<div class="overlay" id="modal-confirm">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">
+      <span id="confirm-titulo">Confirmar</span>
+    </div>
+    <p id="confirm-mensagem" style="font-size:0.92rem;color:var(--text2);margin-bottom:24px;line-height:1.5"></p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="confirm-cancelar" onclick="fecharModal('modal-confirm')">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST CONTAINER -->
 <div id="toast-wrap"></div>
 
@@ -1221,6 +1228,19 @@ let tipoAlunoAtual = 'normal';
 let importData = [];
 let dragAlunoId = null;
 let dragFromSeat = null;
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // ═══════════════════════════════════════════
 // PERSISTENCE — FIREBASE + localStorage fallback
@@ -1312,6 +1332,15 @@ function abrirModal(id) {
 function fecharModal(id) {
   document.getElementById(id).classList.remove('open');
 }
+function confirmar(titulo, mensagem, onOk) {
+  document.getElementById('confirm-titulo').textContent = titulo;
+  document.getElementById('confirm-mensagem').textContent = mensagem;
+  const btn = document.getElementById('confirm-ok');
+  const novo = btn.cloneNode(true); // remove listeners anteriores
+  btn.parentNode.replaceChild(novo, btn);
+  novo.addEventListener('click', () => { fecharModal('modal-confirm'); onOk(); });
+  abrirModal('modal-confirm');
+}
 document.querySelectorAll('.overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) fecharModal(el.id); });
 });
@@ -1363,13 +1392,13 @@ function renderDashboard() {
     const alocados = Object.values(state.assentos[t.id] || {}).filter(v => v).length;
     const pct = total > 0 ? Math.round((alocados / total) * 100) : 0;
     return `<div class="dash-turma-item" onclick="irParaMapa('${t.id}')">
-      <div class="dt-nome">${t.nome}</div>
+      <div class="dt-nome">${escapeHtml(t.nome)}</div>
       <div class="dt-meta">
         <span>📐 ${t.cols}×${t.rows}</span>
         <span>👥 ${alunos}</span>
         <span>🪑 ${alocados}/${total}</span>
       </div>
-      ${t.disciplina ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:2px">🧑‍🏫 Orientador: ${t.disciplina}</div>` : ''}
+      ${t.disciplina ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:2px">🧑‍🏫 Orientador: ${escapeHtml(t.disciplina)}</div>` : ''}
       <div class="dash-progress"><div class="dash-progress-bar" style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
@@ -1377,8 +1406,11 @@ function renderDashboard() {
 
 function irParaMapa(turmaId) {
   turmaSelecionada = turmaId;
-  showTabDireto('alunos');
-  atualizarPainelAlunos();
+  showTabDireto('mapa');
+  renderSelectTurmaMapa();
+  const sel = document.getElementById('select-turma-mapa');
+  if (sel) sel.value = turmaId;
+  renderMapa();
 }
 
 // ═══════════════════════════════════════════
@@ -1406,10 +1438,10 @@ function buscaGlobal(q) {
     }
     const ini = a.nome.charAt(0).toUpperCase();
     return `<div class="busca-item" onclick="irParaAluno('${a.id}','${a.turmaId}')">
-      <div class="busca-item-avatar">${ini}</div>
+      <div class="busca-item-avatar">${escapeHtml(ini)}</div>
       <div class="busca-item-info">
-        <div class="busca-item-nome">${a.nome}</div>
-        <div class="busca-item-meta">${turma ? turma.nome : '—'}</div>
+        <div class="busca-item-nome">${escapeHtml(a.nome)}</div>
+        <div class="busca-item-meta">${turma ? escapeHtml(turma.nome) : '—'}</div>
       </div>
       <div class="busca-item-assento">${assento}</div>
     </div>`;
@@ -1467,9 +1499,9 @@ function mostrarTooltip(ev, aluno, seatIdx) {
     const badgeColor = { normal: '#007a6e', fixed: '#b83a3a', vision: '#007a5a', conc: '#a06010' };
     const badgeBg = { normal: 'rgba(0,168,150,0.12)', fixed: 'rgba(224,92,92,0.12)', vision: 'rgba(0,184,138,0.12)', conc: 'rgba(212,137,26,0.12)' };
     tooltip.innerHTML = `
-      <div class="ct-nome">${aluno.nome}</div>
+      <div class="ct-nome">${escapeHtml(aluno.nome)}</div>
       <div class="ct-tipo" style="color:${badgeColor[aluno.tipo]||'#007a6e'};background:${badgeBg[aluno.tipo]||'rgba(0,168,150,0.12)'};display:inline-block;padding:2px 8px;border-radius:20px;margin-bottom:4px">${labels[aluno.tipo]||'👤 Normal'}</div>
-      ${aluno.obs ? `<div class="ct-obs">📝 ${aluno.obs}</div>` : ''}
+      ${aluno.obs ? `<div class="ct-obs">📝 ${escapeHtml(aluno.obs)}</div>` : ''}
       <div class="ct-assento">Cadeira ${seatIdx + 1}</div>`;
     posicionarTooltip(ev);
     tooltip.style.display = 'block';
@@ -1565,10 +1597,10 @@ function renderTurmas() {
         <button class="btn btn-sm btn-danger btn-icon" onclick="excluirTurma('${t.id}',event)" title="Excluir">🗑️</button>
       </div>
       <div class="turma-card-header">
-        <div class="turma-avatar" style="background:linear-gradient(135deg,${cor}dd,${cor}99)">${inicial}</div>
+        <div class="turma-avatar" style="background:linear-gradient(135deg,${cor}dd,${cor}99)">${escapeHtml(inicial)}</div>
         <div class="turma-info">
-          <div class="turma-name">${t.nome}</div>
-          <div class="turma-subtitle">${t.disciplina ? '🧑‍🏫 '+t.disciplina+' ' : ''}${t.ano ? '· '+t.ano : ''}</div>
+          <div class="turma-name">${escapeHtml(t.nome)}</div>
+          <div class="turma-subtitle">${t.disciplina ? '🧑‍🏫 '+escapeHtml(t.disciplina)+' ' : ''}${t.ano ? '· '+escapeHtml(t.ano) : ''}</div>
         </div>
       </div>
       <div class="turma-meta">
@@ -1635,13 +1667,14 @@ function salvarTurma() {
 function editarTurma(id, ev) { ev.stopPropagation(); abrirModalTurma(id); }
 function excluirTurma(id, ev) {
   ev.stopPropagation();
-  if (!confirm('Excluir esta turma e todos os alunos dela?')) return;
-  state.turmas = state.turmas.filter(t => t.id !== id);
-  state.alunos = state.alunos.filter(a => a.turmaId !== id);
-  delete state.assentos[id];
-  if (turmaSelecionada === id) { turmaSelecionada = null; atualizarPainelAlunos(); }
-  salvarStorage(); renderTurmas(); renderSelectTurmaMapa();
-  toast('Turma excluída.');
+  confirmar('🗑️ Excluir Turma', 'Excluir esta turma e todos os alunos dela? Esta ação não pode ser desfeita.', () => {
+    state.turmas = state.turmas.filter(t => t.id !== id);
+    state.alunos = state.alunos.filter(a => a.turmaId !== id);
+    delete state.assentos[id];
+    if (turmaSelecionada === id) { turmaSelecionada = null; atualizarPainelAlunos(); }
+    salvarStorage(); renderTurmas(); renderSelectTurmaMapa();
+    toast('Turma excluída.');
+  });
 }
 
 function selecionarTurma(id) {
@@ -1692,15 +1725,15 @@ function renderAlunos() {
       <td style="color:var(--text3);font-weight:700;width:36px">${i+1}</td>
       <td>
         <div class="aluno-nome-cell">
-          <span class="aluno-avatar" style="background:linear-gradient(135deg,${cor}dd,${cor}88)">${ini}</span>
+          <span class="aluno-avatar" style="background:linear-gradient(135deg,${cor}dd,${cor}88)">${escapeHtml(ini)}</span>
           <div>
-            <div style="font-weight:700">${a.nome}</div>
+            <div style="font-weight:700">${escapeHtml(a.nome)}</div>
             ${incompCt > 0 ? `<div style="font-size:0.72rem;color:#b83a3a">⚠️ ${incompCt} restrição(ões)</div>` : ''}
           </div>
         </div>
       </td>
-      <td><span class="badge ${badgeCls[a.tipo]||'badge-normal'}">${labels[a.tipo]||a.tipo}</span></td>
-      <td style="color:var(--text2);font-size:0.82rem;max-width:200px">${a.obs||'<span style="opacity:0.4">—</span>'}</td>
+      <td><span class="badge ${badgeCls[a.tipo]||'badge-normal'}">${labels[a.tipo]||escapeHtml(a.tipo)}</span></td>
+      <td style="color:var(--text2);font-size:0.82rem;max-width:200px">${a.obs ? escapeHtml(a.obs) : '<span style="opacity:0.4">—</span>'}</td>
       <td>
         ${assento !== '—'
           ? `<span style="background:rgba(0,168,150,0.1);color:#007a6e;border-radius:20px;padding:3px 10px;font-size:0.78rem;font-weight:700">🪑 ${assento}</span>`
@@ -1868,18 +1901,18 @@ function sincronizarIncomp() {
 
 function editarAluno(id) { abrirModalAluno(id); }
 function excluirAluno(id) {
-  if (!confirm('Excluir este aluno?')) return;
-  // remover do assento
-  for (let tid in state.assentos) {
-    for (let si in state.assentos[tid]) {
-      if (state.assentos[tid][si] === id) state.assentos[tid][si] = null;
+  const aluno = state.alunos.find(a => a.id === id);
+  confirmar('🗑️ Excluir Aluno', `Excluir "${aluno ? aluno.nome : 'este aluno'}"? Esta ação não pode ser desfeita.`, () => {
+    for (let tid in state.assentos) {
+      for (let si in state.assentos[tid]) {
+        if (state.assentos[tid][si] === id) state.assentos[tid][si] = null;
+      }
     }
-  }
-  state.alunos = state.alunos.filter(a => a.id !== id);
-  // Remover esse aluno das listas de incompatibilidade dos outros
-  state.alunos.forEach(a => { if (a.incomp) a.incomp = a.incomp.filter(iid => iid !== id); });
-  salvarStorage(); renderAlunos(); renderTurmas();
-  toast('Aluno removido.');
+    state.alunos = state.alunos.filter(a => a.id !== id);
+    state.alunos.forEach(a => { if (a.incomp) a.incomp = a.incomp.filter(iid => iid !== id); });
+    salvarStorage(); renderAlunos(); renderTurmas();
+    toast('Aluno removido.');
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -2085,7 +2118,7 @@ function renderMapa() {
         onclick="if(handleTouchCadeira(${i}))return; abrirMenuCadeira(${i})"
         title="">
         <span class="cadeira-num">${i+1}</span>
-        <div class="cadeira-aluno"><strong>${firstName}</strong>${lastName?' '+lastName:''}</div>
+        <div class="cadeira-aluno"><strong>${escapeHtml(firstName)}</strong>${lastName?' '+escapeHtml(lastName):''}</div>
         ${emoji ? `<span class="cadeira-tag">${emoji}</span>` : ''}
         ${conflitoTag}
       </div>`;
@@ -2123,7 +2156,7 @@ function renderSemAssento() {
       data-aluno="${a.id}"
       ondragstart="dragStartSidebar(event,'${a.id}')">
       <span>${emoji[a.tipo]||'👤'}</span>
-      <span>${a.nome}</span>
+      <span>${escapeHtml(a.nome)}</span>
     </div>`
   ).join('');
 }
@@ -2191,11 +2224,12 @@ function abrirMenuCadeira(seatIdx) {
   const alunoId = seats[seatIdx] || null;
   if (alunoId) {
     // Remover aluno da cadeira
-    if (confirm('Remover aluno desta cadeira?')) {
+    const aluno = state.alunos.find(a => a.id === alunoId);
+    confirmar('🪑 Remover da cadeira', `Remover "${aluno ? aluno.nome : 'este aluno'}" da cadeira ${seatIdx + 1}?`, () => {
       seats[seatIdx] = null;
       ocultarTooltip();
       salvarStorage(); renderMapa();
-    }
+    });
   } else {
     // Alocar aluno não colocado
     const ocupados = new Set(Object.values(seats).filter(v => v));
@@ -2378,10 +2412,11 @@ function embaralharAlunos() {
 
 function limparMapa() {
   if (!turmaSelecionada) return;
-  if (!confirm('Limpar todos os assentos desta turma?')) return;
-  state.assentos[turmaSelecionada] = {};
-  salvarStorage(); renderMapa();
-  toast('Mapa limpo!');
+  confirmar('🧹 Limpar Mapa', 'Remover todos os alunos dos assentos desta turma? Os alunos não serão excluídos.', () => {
+    state.assentos[turmaSelecionada] = {};
+    salvarStorage(); renderMapa();
+    toast('Mapa limpo!');
+  });
 }
 
 function salvarMapa() {
@@ -2424,9 +2459,7 @@ renderSelectTurmaMapa();
 atualizarPainelAlunos();
 // Iniciar sincronização Firebase (aguarda SDK carregar)
 setTimeout(iniciarSyncFirebase, 800);
-</script>
 
-<script>
 // ─── PWA: SERVICE WORKER ───
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
