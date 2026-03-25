@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MapaSala — Gerenciador de Turmas</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fdf8f0;
+    --surface2: #eee8d8;
+    --surface3: #e4dcc8;
+    --accent: #00a896;
+    --accent2: #e05c5c;
+    --accent3: #00b88a;
+    --accent4: #d4891a;
+    --text: #2c3a35;
+    --text2: #5a7268;
+    --text3: #8fa89e;
+    --border: #c9bfa8;
+    --card-empty: #ede7d6;
+    --card-normal: #d4f0eb;
+    --card-fixed: #fce8e8;
+    --card-vision: #d4f0e4;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Background decoration */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,168,150,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -200px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(212,137,26,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(245,240,232,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Sora', sans-serif;
+    font-size: 1.3rem; font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo span { color: var(--accent); }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  /* ─── TABS NAV ─── */
+  .tabs-nav {
+    display: flex; gap: 4px;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 8px 18px;
+    border-radius: 9px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem; font-weight: 700;
+    color: var(--text2);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(0,168,150,0.3);
+  }
+  .tab-btn:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+  /* ─── MAIN LAYOUT ─── */
+  main { position: relative; z-index: 1; padding: 28px; max-width: 1400px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ─── CARDS / SECTIONS ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem; font-weight: 600;
+    color: var(--text);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .icon { font-size: 1.1rem; }
+
+  /* ─── FORM ELEMENTS ─── */
+  .form-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px; }
+  .form-group label {
+    font-size: 0.8rem; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  input[type=text], input[type=number], select, textarea {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,168,150,0.18);
+  }
+  select option { background: var(--surface2); }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 20px;
+    border: none; border-radius: var(--radius-sm);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #008a7a; box-shadow: 0 4px 16px rgba(0,168,150,0.35); transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { background: var(--surface3); }
+  .btn-danger { background: rgba(255,101,132,0.15); color: var(--accent2); border: 1.5px solid rgba(255,101,132,0.3); }
+  .btn-danger:hover { background: rgba(255,101,132,0.25); }
+  .btn-success { background: rgba(67,233,123,0.15); color: var(--accent3); border: 1.5px solid rgba(67,233,123,0.3); }
+  .btn-success:hover { background: rgba(67,233,123,0.25); }
+  .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+  .btn-icon { padding: 8px; }
+
+  /* ─── TURMAS LIST ─── */
+  .turmas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .turma-card {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .turma-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+  }
+  .turma-card:hover, .turma-card.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,168,150,0.2), 0 8px 24px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+  .turma-card.selected::before { background: linear-gradient(90deg, var(--accent), var(--accent3)); }
+  .turma-name { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+  .turma-meta { font-size: 0.82rem; color: var(--text2); display: flex; gap: 12px; }
+  .turma-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; }
+  .turma-card:hover .turma-actions { opacity: 1; }
+
+  /* ─── ALUNOS TABLE ─── */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius-sm); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th {
+    background: var(--surface3);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.78rem; font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    position: sticky; top: 0;
+  }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,168,150,0.05); }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .badge-normal { background: rgba(0,168,150,0.12); color: #007a6e; }
+  .badge-fixed { background: rgba(224,92,92,0.12); color: #b83a3a; }
+  .badge-vision { background: rgba(0,184,138,0.12); color: #007a5a; }
+  .badge-conc { background: rgba(212,137,26,0.12); color: #a06010; }
+
+  /* ─── MAPA DE SALA ─── */
+  .sala-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .sala-legend {
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 0.82rem; color: var(--text2); font-weight: 600;
+  }
+  .legend-dot {
+    width: 14px; height: 14px;
+    border-radius: 4px;
+  }
+
+  .lousa {
+    background: linear-gradient(135deg, #c8ede8, #a8ddd6);
+    border: 2px solid rgba(0,168,150,0.4);
+    border-radius: 8px;
+    width: 100%;
+    padding: 12px 24px;
+    text-align: center;
+    font-size: 0.85rem; font-weight: 700;
+    color: #006a60;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,168,150,0.15);
+    box-sizing: border-box;
+  }
+
+  .sala-grid {
+    display: grid;
+    gap: 10px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .cadeira {
+    width: 88px; height: 80px;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .cadeira::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    background: white;
+  }
+  .cadeira:hover::before { opacity: 0.04; }
+
+  .cadeira.empty {
+    background: var(--card-empty);
+    border-color: var(--border);
+    border-style: dashed;
+  }
+  .cadeira.empty:hover { border-color: var(--accent); border-style: solid; transform: scale(1.05); }
+
+  .cadeira.occupied-normal {
+    background: linear-gradient(145deg, #c8ede8, #b0e0d8);
+    border-color: rgba(0,168,150,0.5);
+    box-shadow: 0 3px 12px rgba(0,168,150,0.15);
+  }
+  .cadeira.occupied-normal:hover { border-color: var(--accent); transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,168,150,0.25); }
+
+  .cadeira.occupied-fixed {
+    background: linear-gradient(145deg, #fce8e8, #f8d4d4);
+    border-color: rgba(224,92,92,0.5);
+    box-shadow: 0 3px 12px rgba(224,92,92,0.15);
+  }
+  .cadeira.occupied-fixed:hover { border-color: var(--accent2); transform: scale(1.05); box-shadow: 0 6px 20px rgba(224,92,92,0.25); }
+
+  .cadeira.occupied-vision {
+    background: linear-gradient(145deg, #c8f0e0, #b0e8d0);
+    border-color: rgba(0,184,138,0.5);
+    box-shadow: 0 3px 12px rgba(0,184,138,0.15);
+  }
+  .cadeira.occupied-vision:hover { border-color: var(--accent3); transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,184,138,0.25); }
+
+  .cadeira.occupied-conc {
+    background: linear-gradient(145deg, #fce8c8, #f8dab0);
+    border-color: rgba(212,137,26,0.5);
+    box-shadow: 0 3px 12px rgba(212,137,26,0.15);
+  }
+  .cadeira.occupied-conc:hover { border-color: var(--accent4); transform: scale(1.05); box-shadow: 0 6px 20px rgba(212,137,26,0.25); }
+
+  .cadeira.drag-over { transform: scale(1.08); border-style: solid; border-color: #fff; }
+  .cadeira.dragging { opacity: 0.4; transform: scale(0.95); }
+
+  .cadeira-num {
+    position: absolute; top: 5px; left: 7px;
+    font-size: 0.65rem; font-weight: 700;
+    color: var(--text3);
+    line-height: 1;
+  }
+  .cadeira-aluno {
+    font-size: 0.72rem; font-weight: 700;
+    text-align: center;
+    line-height: 1.3;
+    padding: 0 6px;
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .cadeira-tag {
+    position: absolute; bottom: 5px; right: 6px;
+    font-size: 0.6rem;
+  }
+  .cadeira-empty-icon { font-size: 1.4rem; opacity: 0.2; }
+
+  /* DRAG floating label */
+  #drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.8rem; font-weight: 700;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    display: none;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ─── MODAL ─── */
+  .overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%; max-width: 540px;
+    position: relative;
+    transform: scale(0.94) translateY(10px);
+    transition: transform 0.25s;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .overlay.open .modal { transform: scale(1) translateY(0); }
+  .modal-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.25rem; font-weight: 700;
+    margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-close {
+    background: var(--surface2); border: none; cursor: pointer;
+    width: 32px; height: 32px; border-radius: 8px;
+    color: var(--text2); font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: var(--surface3); color: var(--text); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* ─── TOAST ─── */
+  #toast-wrap {
+    position: fixed; bottom: 24px; right: 24px;
+    z-index: 300; display: flex; flex-direction: column; gap: 10px;
+  }
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.88rem; font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    animation: slideIn 0.3s ease;
+    max-width: 320px;
+  }
+  .toast.error { border-left-color: var(--accent2); }
+  @keyframes slideIn { from { opacity:0; transform: translateX(30px); } to { opacity:1; transform: translateX(0); } }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty-state .emo { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.95rem; }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .section-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.4rem; font-weight: 700;
+  }
+
+  /* Seat info panel */
+  .seat-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    min-width: 220px;
+    width: 100%;
+    max-width: 320px;
+  }
+  .seat-panel h4 { font-size: 0.8rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+
+  .mapa-container {
+    display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; justify-content: center;
+  }
+
+  /* Embaralhar btn */
+  .shuffle-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;
+  }
+
+  /* Import area */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text2);
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(0,168,150,0.05);
+    color: var(--text);
+  }
+  .drop-zone .big-icon { font-size: 2.5rem; margin-bottom: 8px; }
+  .drop-zone p { font-size: 0.9rem; }
+
+  /* radio group */
+  .radio-group { display: flex; gap: 12px; flex-wrap: wrap; }
+  .radio-option {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    cursor: pointer; transition: all 0.2s;
+    font-size: 0.88rem; font-weight: 600;
+  }
+  .radio-option input { display: none; }
+  .radio-option.checked {
+    border-color: var(--accent);
+    background: rgba(0,168,150,0.10);
+    color: #007a6e;
+  }
+  .dot { width:10px; height:10px; border-radius:50%; }
+  .dot-normal { background: #00a896; }
+  .dot-fixed { background: var(--accent2); }
+  .dot-vision { background: var(--accent3); }
+  .dot-conc { background: var(--accent4); }
+
+  /* Responsivo */
+  @media (max-width: 600px) {
+    main { padding: 16px; }
+    header { padding: 0 16px; }
+    .cadeira { width: 72px; height: 66px; }
+    .cadeira-aluno { font-size: 0.66rem; }
+  }
+
+  /* ─── DASHBOARD ─── */
+  .dash-boas-vindas {
+    background: linear-gradient(135deg, #00a896 0%, #00c9a7 50%, #00b88a 100%);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .dash-boas-vindas::after {
+    content: '🗺️';
+    position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 4rem; opacity: 0.2;
+  }
+  .dash-boas-vindas h2 { font-family: 'Sora', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+  .dash-boas-vindas p { font-size: 0.9rem; opacity: 0.88; }
+
+  .dash-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,168,150,0.12); }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 2rem; font-weight: 800; color: var(--accent); }
+  .stat-label { font-size: 0.8rem; color: var(--text2); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .dash-section-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    color: var(--text2);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dash-turmas-recentes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .dash-turma-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .dash-turma-item:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,168,150,0.12); }
+  .dash-turma-item .dt-nome { font-weight: 800; font-size: 0.95rem; }
+  .dash-turma-item .dt-meta { font-size: 0.78rem; color: var(--text2); display: flex; gap: 10px; }
+  .dash-progress {
+    height: 4px; border-radius: 2px;
+    background: var(--surface3);
+    margin-top: 6px; overflow: hidden;
+  }
+  .dash-progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+
+  .dash-atalhos {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
+  }
+  .atalho-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem; font-weight: 700;
+    color: var(--text);
+    flex: 1; min-width: 160px;
+  }
+  .atalho-btn:hover { border-color: var(--accent); background: rgba(0,168,150,0.05); color: var(--accent); transform: translateY(-1px); }
+  .atalho-btn .ab-icon { font-size: 1.4rem; }
+
+  /* ─── BUSCA GLOBAL ─── */
+  .busca-wrap {
+    position: relative; margin-bottom: 20px;
+  }
+  .busca-input {
+    width: 100%;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 40px;
+    padding: 12px 20px 12px 48px;
+    font-size: 0.95rem;
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .busca-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,168,150,0.15); }
+  .busca-icon {
+    position: absolute; left: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem; pointer-events: none;
+  }
+  .busca-resultados {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    z-index: 50;
+    max-height: 320px; overflow-y: auto;
+    display: none;
+  }
+  .busca-resultados.aberto { display: block; animation: fadeIn 0.15s ease; }
+  .busca-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .busca-item:last-child { border-bottom: none; }
+  .busca-item:hover { background: rgba(0,168,150,0.06); }
+  .busca-item-avatar {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    flex-shrink: 0;
+  }
+  .busca-item-info { flex: 1; }
+  .busca-item-nome { font-weight: 700; font-size: 0.9rem; }
+  .busca-item-meta { font-size: 0.78rem; color: var(--text2); }
+  .busca-item-assento {
+    font-size: 0.75rem; font-weight: 700;
+    background: rgba(0,168,150,0.12); color: #007a6e;
+    padding: 3px 8px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .busca-vazio { padding: 20px; text-align: center; color: var(--text3); font-size: 0.88rem; }
+
+  /* ─── TOOLTIP CADEIRA ─── */
+  .cadeira-tooltip {
+    position: fixed;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.15);
+    z-index: 500;
+    pointer-events: none;
+    min-width: 160px; max-width: 240px;
+    display: none;
+    animation: fadeIn 0.15s ease;
+  }
+  .ct-nome { font-weight: 800; font-size: 0.9rem; margin-bottom: 4px; }
+  .ct-tipo { font-size: 0.75rem; font-weight: 700; margin-bottom: 4px; }
+  .ct-obs { font-size: 0.75rem; color: var(--text2); line-height: 1.4; }
+  .ct-assento { font-size: 0.72rem; color: var(--text3); margin-top: 4px; }
+
+  /* ─── TOUCH MOBILE (tablet) ─── */
+  .cadeira.touch-selected {
+    border-color: var(--accent) !important;
+    border-style: solid !important;
+    box-shadow: 0 0 0 3px rgba(0,168,150,0.3) !important;
+    transform: scale(1.06) !important;
+  }
+  .touch-hint {
+    font-size: 0.8rem; color: var(--text3);
+    display: none; align-items: center; gap: 6px;
+    margin-left: 8px;
+  }
+  @media (pointer: coarse) {
+    .touch-hint { display: flex; }
+    .cadeira { min-width: 76px; min-height: 70px; touch-action: none; }
+  }
+
+  /* ─── IMPRESSÃO ─── */
+  @media print {
+    body * { visibility: hidden; }
+    #area-impressao, #area-impressao * { visibility: visible; }
+    #area-impressao {
+      position: fixed; inset: 0;
+      background: #fff;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-start;
+      padding: 24px;
+      z-index: 9999;
+    }
+    .cadeira { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ÁREA DE IMPRESSÃO (oculta, ativada só no print) -->
+<div id="area-impressao" style="display:none"></div>
+
+<!-- TOOLTIP CADEIRA -->
+<div class="cadeira-tooltip" id="cadeira-tooltip"></div>
+
+<!-- DRAG GHOST -->
+<div id="drag-ghost"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🗺️</div>
+    Mapa<span>Sala</span>
+  </div>
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="showTab('dashboard', event)">🏠 Início</button>
+    <button class="tab-btn" onclick="showTab('turmas', event)">🏫 Turmas</button>
+    <button class="tab-btn" onclick="showTab('alunos', event)">👥 Alunos</button>
+    <button class="tab-btn" onclick="showTab('mapa', event)">🪑 Mapa</button>
+  </div>
+  <div style="width:120px;display:flex;justify-content:flex-end">
+    <span id="status-conexao" style="font-size:0.75rem;font-weight:700;color:var(--text3)">⏳ Conectando…</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ══════════════════ TAB: DASHBOARD ══════════════════ -->
+<div id="tab-dashboard" class="tab-panel active">
+
+  <div class="dash-boas-vindas">
+    <h2 id="dash-saudacao">Bom dia! 👋</h2>
+    <p>Gerencie suas turmas, alunos e mapas de sala em um só lugar.</p>
+  </div>
+
+  <!-- Busca global -->
+  <div class="busca-wrap">
+    <span class="busca-icon">🔍</span>
+    <input class="busca-input" type="text" id="busca-global" placeholder="Buscar aluno por nome…" oninput="buscaGlobal(this.value)" onblur="setTimeout(()=>fecharBusca(),200)">
+    <div class="busca-resultados" id="busca-resultados"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="dash-stats">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-turmas">0</div>
+      <div class="stat-label">🏫 Turmas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-alunos">0</div>
+      <div class="stat-label">👥 Alunos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-alocados">0</div>
+      <div class="stat-label">🪑 Alocados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-sem-assento">0</div>
+      <div class="stat-label">📋 Sem assento</div>
+    </div>
+  </div>
+
+  <!-- Atalhos rápidos -->
+  <div class="dash-section-title">⚡ Atalhos rápidos</div>
+  <div class="dash-atalhos" style="margin-bottom:24px">
+    <button class="atalho-btn" onclick="abrirModalTurma()"><span class="ab-icon">🏫</span> Nova Turma</button>
+    <button class="atalho-btn" onclick="showTabDireto('alunos')"><span class="ab-icon">👥</span> Ver Alunos</button>
+    <button class="atalho-btn" onclick="showTabDireto('mapa')"><span class="ab-icon">🪑</span> Ver Mapa</button>
+  </div>
+
+  <!-- Turmas recentes -->
+  <div class="dash-section-title">🏫 Suas Turmas</div>
+  <div class="dash-turmas-recentes" id="dash-turmas-lista"></div>
+  <div id="dash-empty" class="empty-state" style="display:none">
+    <div class="emo">🏫</div>
+    <p>Nenhuma turma ainda.<br>Clique em <strong>Nova Turma</strong> para começar!</p>
+  </div>
+
+</div>
+
+<!-- ══════════════════ TAB: TURMAS ══════════════════ -->
+<div id="tab-turmas" class="tab-panel">
+  <div class="section-header">
+    <div class="section-title">🏫 Minhas Turmas</div>
+    <button class="btn btn-primary" onclick="abrirModalTurma()">＋ Nova Turma</button>
+  </div>
+
+  <div id="turmas-grid" class="turmas-grid"></div>
+  <div id="turmas-empty" class="empty-state" style="display:none">
+    <div class="emo">🏫</div>
+    <p>Nenhuma turma cadastrada ainda.<br>Clique em <strong>+ Nova Turma</strong> para começar!</p>
+  </div>
+</div>
+
+<!-- ══════════════════ TAB: ALUNOS ══════════════════ -->
+<div id="tab-alunos" class="tab-panel">
+  <div class="section-header">
+    <div>
+      <div class="section-title">👥 Alunos</div>
+      <div style="font-size:0.85rem;color:var(--text2);margin-top:4px">
+        Turma: <strong id="alunos-turma-nome" style="color:var(--accent)">Selecione uma turma</strong>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="baixarModelo()">📥 Baixar Modelo Excel</button>
+      <button class="btn btn-secondary" onclick="abrirImportExcel()">📊 Importar Excel/CSV</button>
+      <button class="btn btn-primary" onclick="abrirModalAluno()" id="btn-add-aluno" disabled>＋ Adicionar Aluno</button>
+    </div>
+  </div>
+
+  <div id="alunos-sem-turma" class="empty-state">
+    <div class="emo">👈</div>
+    <p>Vá até <strong>Turmas</strong> e clique em uma turma para gerenciar seus alunos.</p>
+  </div>
+
+  <div id="alunos-content" style="display:none">
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>Tipo</th>
+              <th>Observação</th>
+              <th>Assento atual</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="alunos-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="alunos-empty2" class="empty-state" style="display:none">
+      <div class="emo">📋</div>
+      <p>Nenhum aluno cadastrado nesta turma.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TAB: MAPA ══════════════════ -->
+<div id="tab-mapa" class="tab-panel">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🪑 Mapa de Sala</div>
+      <div style="font-size:0.85rem;color:var(--text2);margin-top:4px">
+        Turma: <strong id="mapa-turma-nome" style="color:var(--accent)">Selecione uma turma</strong>
+      </div>
+    </div>
+    <div>
+      <select id="select-turma-mapa" onchange="mudarTurmaMapa(this.value)" style="min-width:180px">
+        <option value="">Selecione a turma…</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="mapa-sem-turma" class="empty-state">
+    <div class="emo">🗺️</div>
+    <p>Selecione uma turma para visualizar o mapa de sala.</p>
+  </div>
+
+  <div id="mapa-content" style="display:none">
+    <div class="shuffle-bar">
+      <button class="btn btn-primary" onclick="embaralharAlunos()">🔀 Embaralhar Livres</button>
+      <button class="btn btn-secondary" onclick="limparMapa()">🗑️ Limpar Mapa</button>
+      <button class="btn btn-secondary" onclick="imprimirMapa()">🖨️ Imprimir Mapa</button>
+      <span class="touch-hint">👆 Toque para selecionar, toque no destino para mover</span>
+      <span style="font-size:0.82rem;color:var(--text3);margin-left:8px" id="drag-hint-desktop">
+        💡 Arraste os alunos entre as cadeiras
+      </span>
+    </div>
+
+    <div class="mapa-container">
+      <div>
+        <div class="lousa">⬛ LOUSA / QUADRO ⬛</div>
+        <div style="height:16px"></div>
+        <div id="sala-grid" class="sala-grid"></div>
+      </div>
+      <div>
+        <div class="seat-panel">
+          <h4>📋 Sem assento</h4>
+          <div id="sem-assento-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div id="sem-assento-empty" style="font-size:0.82rem;color:var(--text3);display:none">Todos alocados! ✅</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ══════════════════ MODAL: TURMA ══════════════════ -->
+<div class="overlay" id="modal-turma">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-turma-titulo">🏫 Nova Turma</span>
+      <button class="modal-close" onclick="fecharModal('modal-turma')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome da Turma *</label>
+        <input type="text" id="t-nome" placeholder="Ex: 9º Ano A" maxlength="50">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Colunas (largura)</label>
+        <input type="number" id="t-cols" value="6" min="2" max="12">
+      </div>
+      <div class="form-group">
+        <label>Fileiras (profundidade)</label>
+        <input type="number" id="t-rows" value="5" min="2" max="10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Ano / Período</label>
+        <input type="text" id="t-ano" placeholder="Ex: 2025, 1º Sem…" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label>Disciplina</label>
+        <input type="text" id="t-disciplina" placeholder="Ex: Matemática" maxlength="40">
+      </div>
+    </div>
+    <input type="hidden" id="t-edit-id">
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-turma')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarTurma()">Salvar Turma</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: ALUNO ══════════════════ -->
+<div class="overlay" id="modal-aluno">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-aluno-titulo">👤 Novo Aluno</span>
+      <button class="modal-close" onclick="fecharModal('modal-aluno')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome completo *</label>
+        <input type="text" id="a-nome" placeholder="Nome do aluno" maxlength="80">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px" id="a-turma-group">
+      <label>Turma</label>
+      <select id="a-turma-select"></select>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Tipo / Necessidade</label>
+      <div class="radio-group" id="tipo-radio-group">
+        <label class="radio-option checked" onclick="selecionarTipo('normal', this)">
+          <input type="radio" name="tipo" value="normal" checked>
+          <div class="dot dot-normal"></div> Normal
+        </label>
+        <label class="radio-option" onclick="selecionarTipo('fixed', this)">
+          <input type="radio" name="tipo" value="fixed">
+          <div class="dot dot-fixed"></div> Laudo / Fixo
+        </label>
+        <label class="radio-option" onclick="selecionarTipo('vision', this)">
+          <input type="radio" name="tipo" value="vision">
+          <div class="dot dot-vision"></div> Visão
+        </label>
+        <label class="radio-option" onclick="selecionarTipo('conc', this)">
+          <input type="radio" name="tipo" value="conc">
+          <div class="dot dot-conc"></div> Concentração
+        </label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Observações</label>
+        <textarea id="a-obs" rows="2" placeholder="Laudo, necessidade especial, nota…" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <input type="hidden" id="a-edit-id">
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-aluno')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAluno()">Salvar Aluno</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: IMPORT EXCEL ══════════════════ -->
+<div class="overlay" id="modal-import">
+  <div class="modal">
+    <div class="modal-title">
+      📊 Importar Alunos (Excel / CSV)
+      <button class="modal-close" onclick="fecharModal('modal-import')">✕</button>
+    </div>
+    <p style="font-size:0.88rem;color:var(--text2);margin-bottom:16px">
+      Envie um arquivo <strong>.xlsx</strong> ou <strong>.csv</strong> com os alunos. A primeira linha deve ser o cabeçalho. Colunas reconhecidas: <code style="background:var(--surface3);padding:2px 6px;border-radius:4px">nome</code>, <code style="background:var(--surface3);padding:2px 6px;border-radius:4px">tipo</code> (normal/fixed/vision/conc), <code style="background:var(--surface3);padding:2px 6px;border-radius:4px">observacao</code>.
+    </p>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-import').click()">
+      <div class="big-icon">📁</div>
+      <p><strong>Clique aqui</strong> ou arraste o arquivo</p>
+      <p style="font-size:0.78rem;margin-top:6px;opacity:0.6">.xlsx, .xls ou .csv</p>
+    </div>
+    <input type="file" id="file-import" accept=".xlsx,.xls,.csv" style="display:none" onchange="processarImport(event)">
+    <div id="import-preview" style="display:none;margin-top:16px">
+      <div class="card-title"><span class="icon">👀</span> Prévia (<span id="preview-count">0</span> alunos)</div>
+      <div class="table-wrap" style="max-height:200px;overflow-y:auto">
+        <table>
+          <thead><tr><th>Nome</th><th>Tipo</th><th>Observação</th></tr></thead>
+          <tbody id="preview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="import-error" style="color:var(--accent2);font-size:0.85rem;margin-top:10px;display:none"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-import')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-confirmar-import" disabled onclick="confirmarImport()">✅ Importar Alunos</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-wrap"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDtAL7ukOCxt08LIP-OwNpjQDPAMb-QJS8",
+  authDomain: "mapa-de-sala-16b23.firebaseapp.com",
+  databaseURL: "https://mapa-de-sala-16b23-default-rtdb.firebaseio.com",
+  projectId: "mapa-de-sala-16b23",
+  storageBucket: "mapa-de-sala-16b23.firebasestorage.app",
+  messagingSenderId: "110112813889",
+  appId: "1:110112813889:web:1399efd3f5714a8cc827c0"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+const dbRef = ref(db, 'mapasala');
+
+// Expor funções Firebase para o script principal
+window._fbSet = (data) => set(dbRef, data);
+window._fbOnValue = (cb) => onValue(dbRef, snap => cb(snap.val()));
+</script>
+
+<!-- SheetJS para leitura de Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let state = {
+  turmas: [],       // [{id, nome, cols, rows, ano, disciplina}]
+  alunos: [],       // [{id, turmaId, nome, tipo, obs}]
+  assentos: {},     // {turmaId: {seatIdx: alunoId | null}}
+};
+let turmaSelecionada = null; // id
+let tipoAlunoAtual = 'normal';
+let importData = [];
+let dragAlunoId = null;
+let dragFromSeat = null;
+
+// ═══════════════════════════════════════════
+// PERSISTENCE — FIREBASE + localStorage fallback
+// ═══════════════════════════════════════════
+let _fbReady = false;
+let _ignorarProximoSync = false;
+
+function salvarStorage() {
+  // Sempre salva local como cache
+  localStorage.setItem('mapasala_v2', JSON.stringify(state));
+  // Salva no Firebase se disponível
+  if (window._fbSet) {
+    _ignorarProximoSync = true;
+    window._fbSet(state).catch(e => {
+      console.warn('Firebase write error:', e);
+      _ignorarProximoSync = false;
+    });
+  }
+}
+
+function carregarStorage() {
+  // Carrega do cache local enquanto Firebase não responde
+  const raw = localStorage.getItem('mapasala_v2');
+  if (raw) { try { state = JSON.parse(raw); } catch(e){} }
+}
+
+function iniciarSyncFirebase() {
+  if (!window._fbOnValue) {
+    // Firebase ainda não carregou, tentar em 1s
+    setTimeout(iniciarSyncFirebase, 1000);
+    return;
+  }
+  window._fbOnValue(data => {
+    if (_ignorarProximoSync) { _ignorarProximoSync = false; return; }
+    if (!data) return; // banco vazio, mantém local
+    // Mesclar dados do Firebase
+    state = data;
+    if (!state.turmas) state.turmas = [];
+    if (!state.alunos) state.alunos = [];
+    if (!state.assentos) state.assentos = {};
+    localStorage.setItem('mapasala_v2', JSON.stringify(state));
+    // Re-renderizar tudo
+    renderDashboard();
+    renderTurmas();
+    renderSelectTurmaMapa();
+    atualizarPainelAlunos();
+    if (turmaSelecionada) renderMapa();
+    if (!_fbReady) {
+      _fbReady = true;
+      setStatusConexao(true);
+    }
+  });
+}
+
+function setStatusConexao(online) {
+  const el = document.getElementById('status-conexao');
+  if (!el) return;
+  el.textContent = online ? '🟢 Sincronizado' : '🔴 Sem conexão';
+  el.style.color = online ? '#007a6e' : '#b83a3a';
+}
+
+// Detectar online/offline
+window.addEventListener('online',  () => setStatusConexao(true));
+window.addEventListener('offline', () => setStatusConexao(false));
+
+// ═══════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════
+function showTab(name, ev) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const btn = ev ? ev.currentTarget : document.querySelector(`.tab-btn[onclick*="'${name}'"]`);
+  if (btn) btn.classList.add('active');
+  if (name === 'mapa') { turmaSelecionada = null; renderSelectTurmaMapa(); renderMapa(); }
+  if (name === 'turmas') renderTurmas();
+  if (name === 'dashboard') renderDashboard();
+}
+function showTabDireto(name) {
+  showTab(name);
+}
+
+// ═══════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════
+function abrirModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) fecharModal(el.id); });
+});
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function toast(msg, tipo='ok') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (tipo==='error' ? ' error' : '');
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard() {
+  // Saudação por hora
+  const h = new Date().getHours();
+  const saud = h < 12 ? 'Bom dia! 👋' : h < 18 ? 'Boa tarde! 👋' : 'Boa noite! 👋';
+  document.getElementById('dash-saudacao').textContent = saud;
+
+  // Stats
+  const totalAlunos = state.alunos.length;
+  let totalAlocados = 0;
+  for (const tid in state.assentos) {
+    totalAlocados += Object.values(state.assentos[tid]).filter(v => v).length;
+  }
+  document.getElementById('stat-turmas').textContent = state.turmas.length;
+  document.getElementById('stat-alunos').textContent = totalAlunos;
+  document.getElementById('stat-alocados').textContent = totalAlocados;
+  document.getElementById('stat-sem-assento').textContent = Math.max(0, totalAlunos - totalAlocados);
+
+  // Lista de turmas
+  const lista = document.getElementById('dash-turmas-lista');
+  const empty = document.getElementById('dash-empty');
+  if (!state.turmas.length) { lista.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  lista.innerHTML = state.turmas.map(t => {
+    const alunos = state.alunos.filter(a => a.turmaId === t.id).length;
+    const total = t.cols * t.rows;
+    const alocados = Object.values(state.assentos[t.id] || {}).filter(v => v).length;
+    const pct = total > 0 ? Math.round((alocados / total) * 100) : 0;
+    return `<div class="dash-turma-item" onclick="irParaMapa('${t.id}')">
+      <div class="dt-nome">${t.nome}</div>
+      <div class="dt-meta">
+        <span>📐 ${t.cols}×${t.rows}</span>
+        <span>👥 ${alunos}</span>
+        <span>🪑 ${alocados}/${total}</span>
+      </div>
+      ${t.disciplina ? `<div style="font-size:0.75rem;color:var(--text3)">📚 ${t.disciplina}</div>` : ''}
+      <div class="dash-progress"><div class="dash-progress-bar" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function irParaMapa(turmaId) {
+  turmaSelecionada = turmaId;
+  showTabDireto('mapa');
+  renderSelectTurmaMapa();
+  // Forçar select e renderizar
+  const sel = document.getElementById('select-turma-mapa');
+  if (sel) sel.value = turmaId;
+  renderMapa();
+}
+
+// ═══════════════════════════════════════════
+// BUSCA GLOBAL
+// ═══════════════════════════════════════════
+function buscaGlobal(q) {
+  const box = document.getElementById('busca-resultados');
+  if (!q || q.trim().length < 2) { box.classList.remove('aberto'); return; }
+  const termo = q.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  const matches = state.alunos.filter(a =>
+    a.nome.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').includes(termo)
+  ).slice(0, 10);
+
+  if (!matches.length) {
+    box.innerHTML = '<div class="busca-vazio">Nenhum aluno encontrado 😕</div>';
+    box.classList.add('aberto'); return;
+  }
+
+  box.innerHTML = matches.map(a => {
+    const turma = state.turmas.find(t => t.id === a.turmaId);
+    const seats = state.assentos[a.turmaId] || {};
+    let assento = '—';
+    for (const [si, aid] of Object.entries(seats)) {
+      if (aid === a.id) { assento = 'Cadeira ' + (parseInt(si) + 1); break; }
+    }
+    const ini = a.nome.charAt(0).toUpperCase();
+    return `<div class="busca-item" onclick="irParaAluno('${a.id}','${a.turmaId}')">
+      <div class="busca-item-avatar">${ini}</div>
+      <div class="busca-item-info">
+        <div class="busca-item-nome">${a.nome}</div>
+        <div class="busca-item-meta">${turma ? turma.nome : '—'}</div>
+      </div>
+      <div class="busca-item-assento">${assento}</div>
+    </div>`;
+  }).join('');
+  box.classList.add('aberto');
+}
+
+function fecharBusca() {
+  document.getElementById('busca-resultados').classList.remove('aberto');
+}
+
+function irParaAluno(alunoId, turmaId) {
+  fecharBusca();
+  document.getElementById('busca-global').value = '';
+  turmaSelecionada = turmaId;
+  // Ir para mapa e destacar
+  showTabDireto('mapa');
+  renderSelectTurmaMapa();
+  const sel = document.getElementById('select-turma-mapa');
+  if (sel) sel.value = turmaId;
+  renderMapa();
+  // Destacar cadeira do aluno após render
+  setTimeout(() => {
+    const seats = state.assentos[turmaId] || {};
+    for (const [si, aid] of Object.entries(seats)) {
+      if (aid === alunoId) {
+        const cel = document.querySelector(`.cadeira[data-seat="${si}"]`);
+        if (cel) {
+          cel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          cel.style.outline = '3px solid var(--accent)';
+          cel.style.outlineOffset = '2px';
+          setTimeout(() => { cel.style.outline = ''; }, 2000);
+        }
+        break;
+      }
+    }
+  }, 100);
+}
+
+// ═══════════════════════════════════════════
+// TOOLTIP CADEIRA
+// ═══════════════════════════════════════════
+const tooltip = document.getElementById('cadeira-tooltip');
+let tooltipTimer = null;
+
+function mostrarTooltip(ev, aluno, seatIdx) {
+  clearTimeout(tooltipTimer);
+  tooltipTimer = setTimeout(() => {
+    const labels = { normal: '👤 Normal', fixed: '🔒 Laudo / Fixo', vision: '👁️ Visão', conc: '💛 Concentração' };
+    const badgeColor = { normal: '#007a6e', fixed: '#b83a3a', vision: '#007a5a', conc: '#a06010' };
+    const badgeBg = { normal: 'rgba(0,168,150,0.12)', fixed: 'rgba(224,92,92,0.12)', vision: 'rgba(0,184,138,0.12)', conc: 'rgba(212,137,26,0.12)' };
+    tooltip.innerHTML = `
+      <div class="ct-nome">${aluno.nome}</div>
+      <div class="ct-tipo" style="color:${badgeColor[aluno.tipo]||'#007a6e'};background:${badgeBg[aluno.tipo]||'rgba(0,168,150,0.12)'};display:inline-block;padding:2px 8px;border-radius:20px;margin-bottom:4px">${labels[aluno.tipo]||'👤 Normal'}</div>
+      ${aluno.obs ? `<div class="ct-obs">📝 ${aluno.obs}</div>` : ''}
+      <div class="ct-assento">Cadeira ${seatIdx + 1}</div>`;
+    posicionarTooltip(ev);
+    tooltip.style.display = 'block';
+  }, 400);
+}
+
+function posicionarTooltip(ev) {
+  const x = ev.clientX + 14;
+  const y = ev.clientY - 10;
+  const w = tooltip.offsetWidth || 200;
+  const winW = window.innerWidth;
+  tooltip.style.left = (x + w > winW ? x - w - 28 : x) + 'px';
+  tooltip.style.top = Math.max(8, y) + 'px';
+}
+
+function ocultarTooltip() {
+  clearTimeout(tooltipTimer);
+  tooltip.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════
+// TOUCH / TABLET
+// ═══════════════════════════════════════════
+let touchSelecionado = null; // { alunoId, fromSeat } ou null
+
+function handleTouchCadeira(seatIdx) {
+  if (!turmaSelecionada) return;
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  if (!isTouch) return false; // deixa o click normal funcionar
+
+  const seats = state.assentos[turmaSelecionada];
+  const alunoId = seats[seatIdx] !== undefined ? seats[seatIdx] : null;
+
+  if (!touchSelecionado) {
+    // Primeira tocada: selecionar cadeira com aluno
+    if (!alunoId) {
+      // cadeira vazia: abrir menu normal
+      return false;
+    }
+    const movingAluno = state.alunos.find(a => a.id === alunoId);
+    if (movingAluno && movingAluno.tipo === 'fixed') {
+      toast('Aluno com laudo/fixo não pode ser movido.', 'error'); return true;
+    }
+    touchSelecionado = { alunoId, fromSeat: seatIdx };
+    // Destacar cadeira
+    document.querySelectorAll('.cadeira').forEach(c => c.classList.remove('touch-selected'));
+    const cel = document.querySelector(`.cadeira[data-seat="${seatIdx}"]`);
+    if (cel) cel.classList.add('touch-selected');
+    toast('Toque no destino para mover ' + movingAluno.nome.split(' ')[0] + ' 👆');
+    return true;
+  } else {
+    // Segunda tocada: mover para destino
+    const { alunoId: movId, fromSeat } = touchSelecionado;
+    touchSelecionado = null;
+    document.querySelectorAll('.cadeira').forEach(c => c.classList.remove('touch-selected'));
+
+    if (fromSeat === seatIdx) return true; // mesma cadeira, cancelar
+
+    const occupantAtTarget = seats[seatIdx] || null;
+    const movingAluno = state.alunos.find(a => a.id === movId);
+
+    seats[fromSeat] = occupantAtTarget || null;
+    seats[seatIdx] = movId;
+    salvarStorage(); renderMapa();
+    toast(`${movingAluno ? movingAluno.nome.split(' ')[0] : ''} movido! ✅`);
+    return true;
+  }
+}
+
+// ═══════════════════════════════════════════
+// TURMAS
+// ═══════════════════════════════════════════
+function renderTurmas() {
+  const grid = document.getElementById('turmas-grid');
+  const empty = document.getElementById('turmas-empty');
+  if (!state.turmas.length) {
+    grid.innerHTML = ''; empty.style.display = 'block'; return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = state.turmas.map(t => {
+    const alunosCt = state.alunos.filter(a => a.turmaId === t.id).length;
+    const totalSeats = t.cols * t.rows;
+    const ocupados = Object.values(state.assentos[t.id] || {}).filter(v => v !== null).length;
+    return `
+    <div class="turma-card ${turmaSelecionada===t.id?'selected':''}" onclick="selecionarTurma('${t.id}')">
+      <div class="turma-actions">
+        <button class="btn btn-sm btn-secondary btn-icon" onclick="editarTurma('${t.id}',event)" title="Editar">✏️</button>
+        <button class="btn btn-sm btn-danger btn-icon" onclick="excluirTurma('${t.id}',event)" title="Excluir">🗑️</button>
+      </div>
+      <div class="turma-name">${t.nome}</div>
+      <div class="turma-meta">
+        <span>📐 ${t.cols}×${t.rows}</span>
+        <span>👥 ${alunosCt} alunos</span>
+        <span>🪑 ${ocupados}/${totalSeats}</span>
+      </div>
+      ${t.disciplina ? `<div style="font-size:0.78rem;color:var(--text3);margin-top:6px">📚 ${t.disciplina} ${t.ano?'· '+t.ano:''}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function abrirModalTurma(editId = null) {
+  document.getElementById('t-nome').value = '';
+  document.getElementById('t-cols').value = 6;
+  document.getElementById('t-rows').value = 5;
+  document.getElementById('t-ano').value = '';
+  document.getElementById('t-disciplina').value = '';
+  document.getElementById('t-edit-id').value = '';
+  if (editId) {
+    const t = state.turmas.find(x => x.id === editId);
+    if (!t) return;
+    document.getElementById('t-nome').value = t.nome;
+    document.getElementById('t-cols').value = t.cols;
+    document.getElementById('t-rows').value = t.rows;
+    document.getElementById('t-ano').value = t.ano || '';
+    document.getElementById('t-disciplina').value = t.disciplina || '';
+    document.getElementById('t-edit-id').value = editId;
+    document.getElementById('modal-turma-titulo').textContent = '✏️ Editar Turma';
+  } else {
+    document.getElementById('modal-turma-titulo').textContent = '🏫 Nova Turma';
+  }
+  abrirModal('modal-turma');
+  setTimeout(() => document.getElementById('t-nome').focus(), 100);
+}
+
+function salvarTurma() {
+  const nome = document.getElementById('t-nome').value.trim();
+  const cols = parseInt(document.getElementById('t-cols').value) || 6;
+  const rows = parseInt(document.getElementById('t-rows').value) || 5;
+  const ano = document.getElementById('t-ano').value.trim();
+  const disciplina = document.getElementById('t-disciplina').value.trim();
+  const editId = document.getElementById('t-edit-id').value;
+  if (!nome) { toast('Informe o nome da turma!', 'error'); return; }
+  if (editId) {
+    const t = state.turmas.find(x => x.id === editId);
+    if (t) { t.nome = nome; t.cols = cols; t.rows = rows; t.ano = ano; t.disciplina = disciplina; }
+  } else {
+    const id = 'T' + Date.now();
+    state.turmas.push({ id, nome, cols, rows, ano, disciplina });
+    state.assentos[id] = {};
+  }
+  salvarStorage();
+  fecharModal('modal-turma');
+  renderTurmas();
+  renderDashboard();
+  renderSelectTurmaMapa();
+  toast('Turma salva! ✅');
+}
+
+function editarTurma(id, ev) { ev.stopPropagation(); abrirModalTurma(id); }
+function excluirTurma(id, ev) {
+  ev.stopPropagation();
+  if (!confirm('Excluir esta turma e todos os alunos dela?')) return;
+  state.turmas = state.turmas.filter(t => t.id !== id);
+  state.alunos = state.alunos.filter(a => a.turmaId !== id);
+  delete state.assentos[id];
+  if (turmaSelecionada === id) { turmaSelecionada = null; atualizarPainelAlunos(); }
+  salvarStorage(); renderTurmas(); renderSelectTurmaMapa();
+  toast('Turma excluída.');
+}
+
+function selecionarTurma(id) {
+  turmaSelecionada = id;
+  renderTurmas();
+  atualizarPainelAlunos();
+  // auto-navegar para alunos
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn')[1].classList.add('active');
+  document.getElementById('tab-alunos').classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+// ALUNOS
+// ═══════════════════════════════════════════
+function atualizarPainelAlunos() {
+  const semTurma = document.getElementById('alunos-sem-turma');
+  const content = document.getElementById('alunos-content');
+  const btnAdd = document.getElementById('btn-add-aluno');
+  const nomeEl = document.getElementById('alunos-turma-nome');
+  if (!turmaSelecionada) {
+    semTurma.style.display = 'block'; content.style.display = 'none';
+    btnAdd.disabled = true; nomeEl.textContent = 'Selecione uma turma';
+    return;
+  }
+  const t = state.turmas.find(x => x.id === turmaSelecionada);
+  if (!t) return;
+  nomeEl.textContent = t.nome;
+  btnAdd.disabled = false;
+  semTurma.style.display = 'none'; content.style.display = 'block';
+  renderAlunos();
+}
+
+function renderAlunos() {
+  if (!turmaSelecionada) return;
+  const tbody = document.getElementById('alunos-tbody');
+  const empty = document.getElementById('alunos-empty2');
+  const alunos = state.alunos.filter(a => a.turmaId === turmaSelecionada);
+  if (!alunos.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  const seats = state.assentos[turmaSelecionada] || {};
+  const labels = { normal: 'Normal', fixed: 'Laudo/Fixo', vision: 'Visão', conc: 'Concentração' };
+  const badgeCls = { normal: 'badge-normal', fixed: 'badge-fixed', vision: 'badge-vision', conc: 'badge-conc' };
+  tbody.innerHTML = alunos.map((a, i) => {
+    let assento = '—';
+    for (let [si, aid] of Object.entries(seats)) { if (aid === a.id) { assento = 'Cadeira ' + (parseInt(si)+1); break; } }
+    return `<tr>
+      <td style="color:var(--text3);font-weight:700">${i+1}</td>
+      <td><strong>${a.nome}</strong></td>
+      <td><span class="badge ${badgeCls[a.tipo]||'badge-normal'}">${labels[a.tipo]||a.tipo}</span></td>
+      <td style="color:var(--text2);font-size:0.82rem">${a.obs||'—'}</td>
+      <td style="font-size:0.82rem;color:var(--text2)">${assento}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-secondary" onclick="editarAluno('${a.id}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirAluno('${a.id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirModalAluno(editId = null) {
+  if (!turmaSelecionada && !editId) return;
+  document.getElementById('a-nome').value = '';
+  document.getElementById('a-obs').value = '';
+  document.getElementById('a-edit-id').value = '';
+  selecionarTipo('normal');
+
+  // Popular select de turmas
+  const sel = document.getElementById('a-turma-select');
+  sel.innerHTML = state.turmas.map(t =>
+    `<option value="${t.id}" ${t.id === turmaSelecionada ? 'selected' : ''}>${t.nome}</option>`
+  ).join('');
+
+  if (editId) {
+    const a = state.alunos.find(x => x.id === editId);
+    if (!a) return;
+    document.getElementById('a-nome').value = a.nome;
+    document.getElementById('a-obs').value = a.obs || '';
+    document.getElementById('a-edit-id').value = editId;
+    // Selecionar a turma atual do aluno
+    sel.value = a.turmaId;
+    selecionarTipo(a.tipo || 'normal');
+    document.getElementById('modal-aluno-titulo').textContent = '✏️ Editar Aluno';
+    document.getElementById('a-turma-group').style.display = 'flex';
+  } else {
+    document.getElementById('modal-aluno-titulo').textContent = '👤 Novo Aluno';
+    // Ao criar novo, oculta o select (turma já é a selecionada)
+    document.getElementById('a-turma-group').style.display = 'none';
+  }
+  abrirModal('modal-aluno');
+  setTimeout(() => document.getElementById('a-nome').focus(), 100);
+}
+
+function selecionarTipo(val, el) {
+  tipoAlunoAtual = val;
+  document.querySelectorAll('#tipo-radio-group .radio-option').forEach(o => {
+    o.classList.remove('checked');
+    if (o.querySelector('input').value === val) o.classList.add('checked');
+  });
+}
+
+function salvarAluno() {
+  const nome = document.getElementById('a-nome').value.trim();
+  const obs = document.getElementById('a-obs').value.trim();
+  const editId = document.getElementById('a-edit-id').value;
+  const novaTurmaId = document.getElementById('a-turma-select').value || turmaSelecionada;
+  if (!nome) { toast('Informe o nome do aluno!', 'error'); return; }
+  if (!novaTurmaId) { toast('Selecione uma turma!', 'error'); return; }
+  if (editId) {
+    const a = state.alunos.find(x => x.id === editId);
+    if (a) {
+      // Se trocou de turma, remover do assento atual
+      if (a.turmaId !== novaTurmaId) {
+        for (let si in state.assentos[a.turmaId] || {}) {
+          if (state.assentos[a.turmaId][si] === editId) {
+            state.assentos[a.turmaId][si] = null;
+            break;
+          }
+        }
+        a.turmaId = novaTurmaId;
+      }
+      a.nome = nome; a.tipo = tipoAlunoAtual; a.obs = obs;
+    }
+  } else {
+    state.alunos.push({ id: 'A' + Date.now() + Math.random().toString(36).slice(2), turmaId: novaTurmaId, nome, tipo: tipoAlunoAtual, obs });
+  }
+  // Ordenar alunos alfabeticamente por turma
+  state.alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  salvarStorage();
+  fecharModal('modal-aluno');
+  renderAlunos();
+  renderTurmas();
+  renderDashboard();
+  toast('Aluno salvo! ✅');
+}
+
+function editarAluno(id) { abrirModalAluno(id); }
+function excluirAluno(id) {
+  if (!confirm('Excluir este aluno?')) return;
+  // remover do assento
+  for (let tid in state.assentos) {
+    for (let si in state.assentos[tid]) {
+      if (state.assentos[tid][si] === id) state.assentos[tid][si] = null;
+    }
+  }
+  state.alunos = state.alunos.filter(a => a.id !== id);
+  salvarStorage(); renderAlunos(); renderTurmas();
+  toast('Aluno removido.');
+}
+
+// ═══════════════════════════════════════════
+// IMPORT EXCEL / CSV
+// ═══════════════════════════════════════════
+function abrirImportExcel() {
+  if (!turmaSelecionada) { toast('Selecione uma turma primeiro!', 'error'); return; }
+  importData = [];
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-error').style.display = 'none';
+  document.getElementById('btn-confirmar-import').disabled = true;
+  document.getElementById('file-import').value = '';
+  abrirModal('modal-import');
+}
+
+// Drag-drop na drop zone
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processarArquivo(file);
+});
+
+function processarImport(ev) { processarArquivo(ev.target.files[0]); }
+
+function processarArquivo(file) {
+  if (!file) return;
+  const errEl = document.getElementById('import-error');
+  errEl.style.display = 'none';
+  const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      let rows = [];
+      if (ext === 'csv') {
+        const text = ev.target.result;
+        rows = csvParseRows(text);
+      } else {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      }
+      importData = processarLinhas(rows);
+      if (!importData.length) throw new Error('Nenhum aluno encontrado no arquivo.');
+      mostrarPreview();
+    } catch(e) {
+      errEl.textContent = '❌ ' + e.message;
+      errEl.style.display = 'block';
+    }
+  };
+  if (ext === 'csv') reader.readAsText(file, 'UTF-8');
+  else reader.readAsArrayBuffer(file);
+}
+
+function csvParseRows(text) {
+  return text.split('\n').map(l => l.split(/[,;]/).map(c => c.trim().replace(/^"|"$/g, '')));
+}
+
+function processarLinhas(rows) {
+  if (!rows.length) return [];
+  // encontrar header
+  const header = rows[0].map(h => (h||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim());
+  const iNome = header.findIndex(h => h.includes('nome'));
+  const iTipo = header.findIndex(h => h.includes('tipo') || h.includes('type'));
+  const iObs  = header.findIndex(h => h.includes('obs') || h.includes('laudo') || h.includes('nota'));
+  if (iNome < 0) {
+    // sem header, assume primeira coluna é nome
+    return rows.filter(r => r[0] && r[0].toString().trim()).map(r => ({
+      nome: r[0].toString().trim(),
+      tipo: normalizarTipo(r[1]),
+      obs: r[2] ? r[2].toString().trim() : ''
+    }));
+  }
+  return rows.slice(1).filter(r => r[iNome] && r[iNome].toString().trim()).map(r => ({
+    nome: r[iNome].toString().trim(),
+    tipo: normalizarTipo(iTipo >= 0 ? r[iTipo] : 'normal'),
+    obs: iObs >= 0 && r[iObs] ? r[iObs].toString().trim() : ''
+  }));
+}
+
+function normalizarTipo(val) {
+  if (!val) return 'normal';
+  const v = val.toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
+  if (v.includes('fix') || v.includes('laud')) return 'fixed';
+  if (v.includes('vis') || v.includes('ocul')) return 'vision';
+  if (v.includes('conc') || v.includes('tdah') || v.includes('atenc')) return 'conc';
+  return 'normal';
+}
+
+function mostrarPreview() {
+  const tbody = document.getElementById('preview-tbody');
+  const labels = { normal: 'Normal', fixed: 'Laudo/Fixo', vision: 'Visão', conc: 'Concentração' };
+  document.getElementById('preview-count').textContent = importData.length;
+  tbody.innerHTML = importData.map(a =>
+    `<tr><td>${a.nome}</td><td>${labels[a.tipo]||a.tipo}</td><td>${a.obs||'—'}</td></tr>`
+  ).join('');
+  document.getElementById('import-preview').style.display = 'block';
+  document.getElementById('btn-confirmar-import').disabled = false;
+}
+
+// ─── BAIXAR MODELO EXCEL ───
+function baixarModelo() {
+  const dados = [
+    ['nome', 'tipo', 'observacao'],
+    ['Ana Paula Souza', 'normal', ''],
+    ['Bruno Henrique Lima', 'normal', ''],
+    ['Carla Mendes', 'vision', 'Usa óculos, prefere frente'],
+    ['Daniel Ferreira', 'fixed', 'Laudo TEA — precisa de assento fixo'],
+    ['Eduarda Costa', 'conc', 'TDAH — evitar janela'],
+    ['Felipe Rodrigues', 'normal', ''],
+    ['Gabriela Oliveira', 'normal', ''],
+    ['Henrique Santos', 'normal', ''],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(dados);
+  ws['!cols'] = [{ wch: 30 }, { wch: 16 }, { wch: 36 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Alunos');
+  XLSX.writeFile(wb, 'modelo_alunos.xlsx');
+  toast('Modelo baixado! Preencha e importe. 📥');
+}
+
+function confirmarImport() {
+  if (!importData.length) return;
+  let added = 0;
+  importData.forEach(a => {
+    state.alunos.push({
+      id: 'A' + Date.now() + Math.random().toString(36).slice(2),
+      turmaId: turmaSelecionada,
+      nome: a.nome, tipo: a.tipo, obs: a.obs
+    });
+    added++;
+  });
+  salvarStorage();
+  fecharModal('modal-import');
+  // Ordenar alfabeticamente após importar
+  state.alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  salvarStorage();
+  renderAlunos(); renderTurmas();
+  toast(`${added} alunos importados! ✅`);
+}
+
+// ═══════════════════════════════════════════
+// MAPA DE SALA
+// ═══════════════════════════════════════════
+function renderSelectTurmaMapa() {
+  const sel = document.getElementById('select-turma-mapa');
+  sel.innerHTML = '<option value="">Selecione a turma…</option>' +
+    state.turmas.map(t => `<option value="${t.id}" ${t.id===turmaSelecionada?'selected':''}>${t.nome}</option>`).join('');
+}
+
+function mudarTurmaMapa(id) {
+  turmaSelecionada = id || null;
+  renderMapa();
+}
+
+function renderMapa() {
+  const sem = document.getElementById('mapa-sem-turma');
+  const content = document.getElementById('mapa-content');
+  const nomeEl = document.getElementById('mapa-turma-nome');
+  if (!turmaSelecionada) {
+    sem.style.display = 'block'; content.style.display = 'none'; return;
+  }
+  const t = state.turmas.find(x => x.id === turmaSelecionada);
+  if (!t) return;
+  nomeEl.textContent = t.nome;
+  sem.style.display = 'none'; content.style.display = 'block';
+
+  if (!state.assentos[t.id]) state.assentos[t.id] = {};
+
+  const grid = document.getElementById('sala-grid');
+  grid.style.gridTemplateColumns = `repeat(${t.cols}, 1fr)`;
+
+  const total = t.cols * t.rows;
+  const seats = state.assentos[t.id];
+  let html = '';
+  for (let i = 0; i < total; i++) {
+    const alunoId = seats[i] !== undefined ? seats[i] : null;
+    const aluno = alunoId ? state.alunos.find(a => a.id === alunoId) : null;
+    if (aluno) {
+      const cls = `occupied-${aluno.tipo || 'normal'}`;
+      const emoji = {normal:'', fixed:'🔒', vision:'👁️', conc:'💛'}[aluno.tipo] || '';
+      const firstName = aluno.nome.split(' ')[0];
+      const lastName = aluno.nome.split(' ').slice(1).join(' ');
+      html += `<div class="cadeira ${cls}" 
+        draggable="true"
+        data-seat="${i}"
+        data-aluno="${alunoId}"
+        ondragstart="dragStart(event,${i},'${alunoId}')"
+        ondragover="dragOver(event)"
+        ondragleave="dragLeave(event)"
+        ondrop="dragDrop(event,${i})"
+        ondragend="dragEnd(event)"
+        onmouseenter="mostrarTooltip(event,${JSON.stringify(aluno).replace(/"/g,'&quot;')},${i})"
+        onmousemove="posicionarTooltip(event)"
+        onmouseleave="ocultarTooltip()"
+        onclick="if(handleTouchCadeira(${i}))return; abrirMenuCadeira(${i})"
+        title="">
+        <span class="cadeira-num">${i+1}</span>
+        <div class="cadeira-aluno"><strong>${firstName}</strong>${lastName?' '+lastName:''}</div>
+        ${emoji ? `<span class="cadeira-tag">${emoji}</span>` : ''}
+      </div>`;
+    } else {
+      html += `<div class="cadeira empty"
+        data-seat="${i}"
+        ondragover="dragOver(event)"
+        ondragleave="dragLeave(event)"
+        ondrop="dragDrop(event,${i})"
+        onclick="if(handleTouchCadeira(${i}))return; abrirMenuCadeira(${i})">
+        <span class="cadeira-num">${i+1}</span>
+        <div class="cadeira-empty-icon">＋</div>
+      </div>`;
+    }
+  }
+  grid.innerHTML = html;
+  renderSemAssento();
+}
+
+function renderSemAssento() {
+  if (!turmaSelecionada) return;
+  const seats = state.assentos[turmaSelecionada] || {};
+  const ocupados = new Set(Object.values(seats).filter(v => v));
+  const semAssento = state.alunos.filter(a => a.turmaId === turmaSelecionada && !ocupados.has(a.id));
+  const container = document.getElementById('sem-assento-list');
+  const empty = document.getElementById('sem-assento-empty');
+  if (!semAssento.length) {
+    container.innerHTML = ''; empty.style.display = 'block'; return;
+  }
+  empty.style.display = 'none';
+  const emoji = {normal:'👤', fixed:'🔒', vision:'👁️', conc:'💛'};
+  container.innerHTML = semAssento.map(a => `
+    <div style="background:var(--surface3);border-radius:8px;padding:8px 10px;font-size:0.82rem;cursor:grab;display:flex;align-items:center;gap:6px;border:1px solid var(--border)"
+      draggable="true"
+      data-aluno="${a.id}"
+      ondragstart="dragStartSidebar(event,'${a.id}')">
+      <span>${emoji[a.tipo]||'👤'}</span>
+      <span>${a.nome}</span>
+    </div>`
+  ).join('');
+}
+
+// ─── DRAG & DROP ─── 
+function dragStart(ev, seatIdx, alunoId) {
+  dragAlunoId = alunoId; dragFromSeat = seatIdx;
+  ev.currentTarget.classList.add('dragging');
+  const aluno = state.alunos.find(a => a.id === alunoId);
+  showGhost(ev, aluno ? aluno.nome.split(' ')[0] : '');
+}
+function dragStartSidebar(ev, alunoId) {
+  dragAlunoId = alunoId; dragFromSeat = null;
+  const aluno = state.alunos.find(a => a.id === alunoId);
+  showGhost(ev, aluno ? aluno.nome.split(' ')[0] : '');
+}
+function showGhost(ev, text) {
+  const g = document.getElementById('drag-ghost');
+  g.textContent = text; g.style.display = 'block';
+}
+document.addEventListener('dragover', ev => {
+  const g = document.getElementById('drag-ghost');
+  g.style.left = ev.clientX + 'px'; g.style.top = ev.clientY + 'px';
+});
+function dragOver(ev) {
+  ev.preventDefault();
+  ev.currentTarget.classList.add('drag-over');
+}
+function dragLeave(ev) { ev.currentTarget.classList.remove('drag-over'); }
+function dragEnd(ev) {
+  document.querySelectorAll('.cadeira').forEach(c => c.classList.remove('dragging','drag-over'));
+  document.getElementById('drag-ghost').style.display = 'none';
+}
+function dragDrop(ev, toSeat) {
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('drag-over');
+  document.getElementById('drag-ghost').style.display = 'none';
+  if (!dragAlunoId || !turmaSelecionada) return;
+  const seats = state.assentos[turmaSelecionada];
+  const occupantAtTarget = seats[toSeat] || null;
+
+  // aluno fixo: não pode ser movido
+  const movingAluno = state.alunos.find(a => a.id === dragAlunoId);
+  if (movingAluno && movingAluno.tipo === 'fixed' && dragFromSeat !== null) {
+    toast('Aluno com laudo/fixo não pode ser movido automaticamente.', 'error'); return;
+  }
+
+  // troca ou coloca
+  if (dragFromSeat !== null) seats[dragFromSeat] = occupantAtTarget || null;
+  else if (occupantAtTarget) {
+    // se vem do sidebar e tem ocupante, retira ocupante (vai pro sidebar)
+    seats[toSeat] = null;
+  }
+  seats[toSeat] = dragAlunoId;
+  dragAlunoId = null; dragFromSeat = null;
+  salvarStorage();
+  renderMapa();
+}
+
+// ─── CLICK CADEIRA ───
+function abrirMenuCadeira(seatIdx) {
+  if (!turmaSelecionada) return;
+  const seats = state.assentos[turmaSelecionada];
+  const alunoId = seats[seatIdx] || null;
+  if (alunoId) {
+    // Remover aluno da cadeira
+    if (confirm('Remover aluno desta cadeira?')) {
+      seats[seatIdx] = null;
+      salvarStorage(); renderMapa();
+    }
+  } else {
+    // Alocar aluno não colocado
+    const ocupados = new Set(Object.values(seats).filter(v => v));
+    const disponiveis = state.alunos.filter(a => a.turmaId === turmaSelecionada && !ocupados.has(a.id));
+    if (!disponiveis.length) { toast('Todos os alunos já estão alocados!'); return; }
+    // Popup simples
+    const nomes = disponiveis.map((a,i) => `${i+1}. ${a.nome}`).join('\n');
+    const escolha = prompt(`Cadeira ${seatIdx+1} — Escolha um aluno (número):\n\n${nomes}`);
+    if (!escolha) return;
+    const idx = parseInt(escolha) - 1;
+    if (idx >= 0 && idx < disponiveis.length) {
+      seats[seatIdx] = disponiveis[idx].id;
+      salvarStorage(); renderMapa();
+      toast(`${disponiveis[idx].nome} alocado(a)! ✅`);
+    }
+  }
+}
+
+// ─── IMPRIMIR MAPA ───
+function imprimirMapa() {
+  if (!turmaSelecionada) return;
+  const t = state.turmas.find(x => x.id === turmaSelecionada);
+  if (!t) return;
+
+  // Clonar a área do mapa
+  const lousa = document.querySelector('.lousa').outerHTML;
+  const grid = document.getElementById('sala-grid').outerHTML;
+
+  const area = document.getElementById('area-impressao');
+  area.innerHTML = `
+    <div style="font-family:'Nunito',sans-serif;width:100%;max-width:900px">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="font-size:1.3rem;font-weight:800;color:#2c3a35">🗺️ MapaSala</div>
+        <div style="font-size:1rem;font-weight:700;color:#00a896;margin-top:4px">${t.nome}${t.disciplina?' — '+t.disciplina:''}</div>
+        ${t.ano ? `<div style="font-size:0.82rem;color:#5a7268">${t.ano}</div>` : ''}
+        <div style="font-size:0.75rem;color:#8fa89e;margin-top:2px">Impresso em ${new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      ${lousa}
+      <div style="height:12px"></div>
+      ${grid}
+    </div>`;
+
+  area.style.display = 'flex';
+  window.print();
+  area.style.display = 'none';
+  area.innerHTML = '';
+}
+
+// ─── EMBARALHAR ───
+function embaralharAlunos() {
+  if (!turmaSelecionada) return;
+  const t = state.turmas.find(x => x.id === turmaSelecionada);
+  if (!t) return;
+  const seats = state.assentos[turmaSelecionada];
+  const total = t.cols * t.rows;
+  // separar fixos e livres
+  const alunos = state.alunos.filter(a => a.turmaId === turmaSelecionada);
+  const fixos = alunos.filter(a => a.tipo === 'fixed');
+  const livres = alunos.filter(a => a.tipo !== 'fixed');
+  // manter assentos dos fixos, limpar livres
+  const novoMap = {};
+  for (let i = 0; i < total; i++) {
+    const aId = seats[i];
+    if (aId) {
+      const a = state.alunos.find(x => x.id === aId);
+      if (a && a.tipo === 'fixed') novoMap[i] = aId;
+    }
+  }
+  // cadeiras livres
+  const cadeirasLivres = [];
+  for (let i = 0; i < total; i++) { if (!novoMap[i]) cadeirasLivres.push(i); }
+  // embaralhar cadeiras
+  for (let i = cadeirasLivres.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cadeirasLivres[i], cadeirasLivres[j]] = [cadeirasLivres[j], cadeirasLivres[i]];
+  }
+  // alocar alunos de visão nas primeiras cadeiras (fileira 1)
+  const vision = livres.filter(a => a.tipo === 'vision');
+  const outros = livres.filter(a => a.tipo !== 'vision');
+  // visão vai para as primeiras fileiras
+  const frontSeats = cadeirasLivres.filter(i => Math.floor(i / t.cols) < 2);
+  const backSeats  = cadeirasLivres.filter(i => Math.floor(i / t.cols) >= 2);
+  let filaShuffle = [...frontSeats, ...backSeats];
+  // embaralhar outros
+  for (let i = outros.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [outros[i], outros[j]] = [outros[j], outros[i]];
+  }
+  const aOrdenar = [...vision, ...outros];
+  aOrdenar.forEach((a, idx) => {
+    if (idx < filaShuffle.length) novoMap[filaShuffle[idx]] = a.id;
+  });
+  state.assentos[turmaSelecionada] = novoMap;
+  salvarStorage(); renderMapa();
+  toast('Alunos embaralhados! 🎲');
+}
+
+function limparMapa() {
+  if (!turmaSelecionada) return;
+  if (!confirm('Limpar todos os assentos desta turma?')) return;
+  state.assentos[turmaSelecionada] = {};
+  salvarStorage(); renderMapa();
+  toast('Mapa limpo!');
+}
+
+function salvarMapa() {
+  salvarStorage();
+  toast('Disposição salva! 💾');
+}
+
+// ═══════════════════════════════════════════
+// EXPORT / IMPORT JSON
+// ═══════════════════════════════════════════
+function exportarDados() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'mapasala_backup.json'; a.click();
+  toast('Dados exportados! 💾');
+}
+function importarDados(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!d.turmas || !d.alunos) throw new Error('Arquivo inválido.');
+      state = d; salvarStorage();
+      renderTurmas(); renderSelectTurmaMapa(); atualizarPainelAlunos();
+      toast('Dados importados! ✅');
+    } catch(err) { toast('Erro: ' + err.message, 'error'); }
+  };
+  r.readAsText(file);
+  ev.target.value = '';
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+carregarStorage();
+renderDashboard();
+renderTurmas();
+renderSelectTurmaMapa();
+atualizarPainelAlunos();
+// Iniciar sincronização Firebase (aguarda SDK carregar)
+setTimeout(iniciarSyncFirebase, 800);
+</script>
+</body>
+</html>
