@@ -338,6 +338,15 @@
   .cadeira.occupied-conc:hover { border-color: var(--accent4); transform: scale(1.05); box-shadow: 0 6px 20px rgba(212,137,26,0.25); }
 
   .cadeira.drag-over { transform: scale(1.08); border-style: solid; border-color: #fff; }
+  .cadeira.cadeira-conflito {
+    outline: 2.5px solid #e05c5c !important;
+    outline-offset: 2px;
+    animation: pulseConflito 1.6s ease-in-out infinite;
+  }
+  @keyframes pulseConflito {
+    0%, 100% { outline-color: #e05c5c; }
+    50% { outline-color: rgba(224,92,92,0.3); }
+  }
   .cadeira.dragging { opacity: 0.4; transform: scale(0.95); }
 
   .cadeira-num {
@@ -1004,6 +1013,14 @@
         <textarea id="a-obs" rows="2" placeholder="Laudo, necessidade especial, nota…" style="resize:vertical"></textarea>
       </div>
     </div>
+    <div class="form-group" style="margin-bottom:16px" id="a-incomp-group">
+      <label>⚠️ Não sentar perto de</label>
+      <select id="a-incomp-select" style="margin-bottom:8px">
+        <option value="">Selecione um aluno…</option>
+      </select>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="adicionarIncomp()" style="width:fit-content">＋ Adicionar restrição</button>
+      <div id="a-incomp-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+    </div>
     <input type="hidden" id="a-edit-id">
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="fecharModal('modal-aluno')">Cancelar</button>
@@ -1555,6 +1572,8 @@ function abrirModalAluno(editId = null) {
   document.getElementById('a-obs').value = '';
   document.getElementById('a-edit-id').value = '';
   selecionarTipo('normal');
+  window._incompAtual = [];
+  renderIncompChips();
 
   // Popular select de turmas
   const sel = document.getElementById('a-turma-select');
@@ -1568,18 +1587,66 @@ function abrirModalAluno(editId = null) {
     document.getElementById('a-nome').value = a.nome;
     document.getElementById('a-obs').value = a.obs || '';
     document.getElementById('a-edit-id').value = editId;
-    // Selecionar a turma atual do aluno
     sel.value = a.turmaId;
     selecionarTipo(a.tipo || 'normal');
+    window._incompAtual = [...(a.incomp || [])];
+    renderIncompChips();
+    popularSelectIncomp(a.turmaId, editId);
     document.getElementById('modal-aluno-titulo').textContent = '✏️ Editar Aluno';
     document.getElementById('a-turma-group').style.display = 'flex';
+    document.getElementById('a-incomp-group').style.display = 'flex';
   } else {
     document.getElementById('modal-aluno-titulo').textContent = '👤 Novo Aluno';
-    // Ao criar novo, oculta o select (turma já é a selecionada)
     document.getElementById('a-turma-group').style.display = 'none';
+    // Ao criar novo, mostrar incomp se já tem turma selecionada
+    if (turmaSelecionada) {
+      popularSelectIncomp(turmaSelecionada, null);
+      document.getElementById('a-incomp-group').style.display = 'flex';
+    } else {
+      document.getElementById('a-incomp-group').style.display = 'none';
+    }
   }
   abrirModal('modal-aluno');
   setTimeout(() => document.getElementById('a-nome').focus(), 100);
+}
+
+// ─── INCOMPATIBILIDADES ───
+window._incompAtual = [];
+
+function popularSelectIncomp(turmaId, excluirId) {
+  const sel = document.getElementById('a-incomp-select');
+  const colegas = state.alunos.filter(a => a.turmaId === turmaId && a.id !== excluirId);
+  sel.innerHTML = '<option value="">Selecione um aluno…</option>' +
+    colegas.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+}
+
+function adicionarIncomp() {
+  const sel = document.getElementById('a-incomp-select');
+  const id = sel.value;
+  if (!id) { toast('Selecione um aluno para adicionar.', 'error'); return; }
+  if (window._incompAtual.includes(id)) { toast('Já adicionado!', 'error'); return; }
+  window._incompAtual.push(id);
+  renderIncompChips();
+  sel.value = '';
+}
+
+function removerIncomp(id) {
+  window._incompAtual = window._incompAtual.filter(x => x !== id);
+  renderIncompChips();
+}
+
+function renderIncompChips() {
+  const container = document.getElementById('a-incomp-chips');
+  if (!container) return;
+  if (!window._incompAtual.length) { container.innerHTML = ''; return; }
+  container.innerHTML = window._incompAtual.map(id => {
+    const a = state.alunos.find(x => x.id === id);
+    const nome = a ? a.nome : id;
+    return `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(224,92,92,0.12);border:1px solid rgba(224,92,92,0.3);color:#b83a3a;border-radius:20px;padding:3px 10px;font-size:0.78rem;font-weight:700">
+      ⚠️ ${nome}
+      <button onclick="removerIncomp('${id}')" style="background:none;border:none;cursor:pointer;color:#b83a3a;font-size:0.9rem;padding:0;line-height:1">✕</button>
+    </span>`;
+  }).join('');
 }
 
 function selecionarTipo(val, el) {
@@ -1610,10 +1677,10 @@ function salvarAluno() {
         }
         a.turmaId = novaTurmaId;
       }
-      a.nome = nome; a.tipo = tipoAlunoAtual; a.obs = obs;
+      a.nome = nome; a.tipo = tipoAlunoAtual; a.obs = obs; a.incomp = [...(window._incompAtual||[])];
     }
   } else {
-    state.alunos.push({ id: 'A' + Date.now() + Math.random().toString(36).slice(2), turmaId: novaTurmaId, nome, tipo: tipoAlunoAtual, obs });
+    state.alunos.push({ id: 'A' + Date.now() + Math.random().toString(36).slice(2), turmaId: novaTurmaId, nome, tipo: tipoAlunoAtual, obs, incomp: [...(window._incompAtual||[])] });
   }
   // Ordenar alunos alfabeticamente por turma
   state.alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
@@ -1635,6 +1702,8 @@ function excluirAluno(id) {
     }
   }
   state.alunos = state.alunos.filter(a => a.id !== id);
+  // Remover esse aluno das listas de incompatibilidade dos outros
+  state.alunos.forEach(a => { if (a.incomp) a.incomp = a.incomp.filter(iid => iid !== id); });
   salvarStorage(); renderAlunos(); renderTurmas();
   toast('Aluno removido.');
 }
@@ -1822,7 +1891,12 @@ function renderMapa() {
       const emoji = {normal:'', fixed:'🔒', vision:'👁️', conc:'💛'}[aluno.tipo] || '';
       const firstName = aluno.nome.split(' ')[0];
       const lastName = aluno.nome.split(' ').slice(1).join(' ');
-      html += `<div class="cadeira ${cls}" 
+      // Verificar conflito de proximidade
+      const vizSeat = vizinhos3x3(i, t.cols, total);
+      const emConflito = aluno.incomp && aluno.incomp.some(iid => vizSeat.some(v => seats[v] === iid));
+      const conflitoCls = emConflito ? ' cadeira-conflito' : '';
+      const conflitoTag = emConflito ? '<span class="cadeira-tag" style="bottom:5px;left:5px;right:auto;font-size:0.7rem" title="Restrição violada">⚠️</span>' : '';
+      html += `<div class="cadeira ${cls}${conflitoCls}" 
         draggable="true"
         data-seat="${i}"
         data-aluno="${alunoId}"
@@ -1839,6 +1913,7 @@ function renderMapa() {
         <span class="cadeira-num">${i+1}</span>
         <div class="cadeira-aluno"><strong>${firstName}</strong>${lastName?' '+lastName:''}</div>
         ${emoji ? `<span class="cadeira-tag">${emoji}</span>` : ''}
+        ${conflitoTag}
       </div>`;
     } else {
       html += `<div class="cadeira empty"
@@ -1913,6 +1988,7 @@ function dragDrop(ev, toSeat) {
   ev.currentTarget.classList.remove('drag-over');
   document.getElementById('drag-ghost').style.display = 'none';
   if (!dragAlunoId || !turmaSelecionada) return;
+  ocultarTooltip();
   const seats = state.assentos[turmaSelecionada];
   const occupantAtTarget = seats[toSeat] || null;
 
@@ -1943,6 +2019,7 @@ function abrirMenuCadeira(seatIdx) {
     // Remover aluno da cadeira
     if (confirm('Remover aluno desta cadeira?')) {
       seats[seatIdx] = null;
+      ocultarTooltip();
       salvarStorage(); renderMapa();
     }
   } else {
@@ -1994,17 +2071,45 @@ function imprimirMapa() {
 }
 
 // ─── EMBARALHAR ───
+function vizinhos3x3(seat, cols, total) {
+  const row = Math.floor(seat / cols), col = seat % cols;
+  const viz = [];
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      const r2 = row + dr, c2 = col + dc;
+      if (r2 >= 0 && c2 >= 0 && c2 < cols) {
+        const s = r2 * cols + c2;
+        if (s >= 0 && s < total) viz.push(s);
+      }
+    }
+  }
+  return viz;
+}
+
+function temConflito(mapa, seat, alunoId, cols, total) {
+  const aluno = state.alunos.find(a => a.id === alunoId);
+  if (!aluno || !aluno.incomp || !aluno.incomp.length) return false;
+  const viz = vizinhos3x3(seat, cols, total);
+  return viz.some(v => aluno.incomp.includes(mapa[v]));
+}
+
+function shuffleArr(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function embaralharAlunos() {
   if (!turmaSelecionada) return;
   const t = state.turmas.find(x => x.id === turmaSelecionada);
   if (!t) return;
   const seats = state.assentos[turmaSelecionada];
   const total = t.cols * t.rows;
-  // separar fixos e livres
-  const alunos = state.alunos.filter(a => a.turmaId === turmaSelecionada);
-  const fixos = alunos.filter(a => a.tipo === 'fixed');
-  const livres = alunos.filter(a => a.tipo !== 'fixed');
-  // manter assentos dos fixos, limpar livres
+
+  // Manter fixos, limpar livres
   const novoMap = {};
   for (let i = 0; i < total; i++) {
     const aId = seats[i];
@@ -2013,33 +2118,88 @@ function embaralharAlunos() {
       if (a && a.tipo === 'fixed') novoMap[i] = aId;
     }
   }
-  // cadeiras livres
-  const cadeirasLivres = [];
-  for (let i = 0; i < total; i++) { if (!novoMap[i]) cadeirasLivres.push(i); }
-  // embaralhar cadeiras
-  for (let i = cadeirasLivres.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [cadeirasLivres[i], cadeirasLivres[j]] = [cadeirasLivres[j], cadeirasLivres[i]];
-  }
-  // alocar alunos de visão nas primeiras cadeiras (fileira 1)
+
+  const alunos = state.alunos.filter(a => a.turmaId === turmaSelecionada);
+  const livres = alunos.filter(a => a.tipo !== 'fixed');
   const vision = livres.filter(a => a.tipo === 'vision');
   const outros = livres.filter(a => a.tipo !== 'vision');
-  // visão vai para as primeiras fileiras
-  const frontSeats = cadeirasLivres.filter(i => Math.floor(i / t.cols) < 2);
-  const backSeats  = cadeirasLivres.filter(i => Math.floor(i / t.cols) >= 2);
-  let filaShuffle = [...frontSeats, ...backSeats];
-  // embaralhar outros
-  for (let i = outros.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [outros[i], outros[j]] = [outros[j], outros[i]];
+
+  const cadeirasLivres = [];
+  for (let i = 0; i < total; i++) { if (!novoMap[i]) cadeirasLivres.push(i); }
+
+  const frontSeats = shuffleArr(cadeirasLivres.filter(i => Math.floor(i / t.cols) < 2));
+  const backSeats  = shuffleArr(cadeirasLivres.filter(i => Math.floor(i / t.cols) >= 2));
+  shuffleArr(outros);
+
+  // Alunos a alocar: vision nas frentes, outros no resto
+  const aAlocar = [...vision, ...outros];
+  const cadeiras = [...frontSeats, ...backSeats];
+
+  // Tentativa com restrições (até 40 tentativas)
+  let melhorMapa = null;
+  let menorConflitos = Infinity;
+
+  for (let tentativa = 0; tentativa < 40; tentativa++) {
+    const mapaTemp = { ...novoMap };
+    const cadTemp = shuffleArr([...cadeiras]);
+    const visionTemp = shuffleArr([...vision]);
+    const outrosTemp = shuffleArr([...outros]);
+    const frontTemp = shuffleArr([...frontSeats]);
+    const backTemp  = shuffleArr([...backSeats]);
+
+    // Alocar vision nas frentes
+    let fi = 0, bi = 0;
+    for (const a of visionTemp) {
+      const seat = fi < frontTemp.length ? frontTemp[fi++] : backTemp[bi++];
+      if (seat !== undefined) mapaTemp[seat] = a.id;
+    }
+    // Alocar outros
+    const usados = new Set(Object.values(mapaTemp).filter(Boolean));
+    const restantes = cadTemp.filter(c => !Object.keys(mapaTemp).map(Number).includes(c));
+    let ri = 0;
+    for (const a of outrosTemp) {
+      if (ri < restantes.length) mapaTemp[restantes[ri++]] = a.id;
+    }
+
+    // Contar conflitos
+    let conflitos = 0;
+    for (const [seat, aId] of Object.entries(mapaTemp)) {
+      if (!aId) continue;
+      const a = state.alunos.find(x => x.id === aId);
+      if (!a || !a.incomp || !a.incomp.length) continue;
+      const viz = vizinhos3x3(parseInt(seat), t.cols, total);
+      viz.forEach(v => { if (a.incomp.includes(mapaTemp[v])) conflitos++; });
+    }
+
+    if (conflitos < menorConflitos) {
+      menorConflitos = conflitos;
+      melhorMapa = { ...mapaTemp };
+      if (conflitos === 0) break;
+    }
   }
-  const aOrdenar = [...vision, ...outros];
-  aOrdenar.forEach((a, idx) => {
-    if (idx < filaShuffle.length) novoMap[filaShuffle[idx]] = a.id;
-  });
-  state.assentos[turmaSelecionada] = novoMap;
+
+  state.assentos[turmaSelecionada] = melhorMapa;
   salvarStorage(); renderMapa();
-  toast('Alunos embaralhados! 🎲');
+
+  if (menorConflitos > 0) {
+    // Contar pares únicos em conflito
+    const pares = new Set();
+    for (const [seat, aId] of Object.entries(melhorMapa)) {
+      if (!aId) continue;
+      const a = state.alunos.find(x => x.id === aId);
+      if (!a || !a.incomp || !a.incomp.length) continue;
+      const viz = vizinhos3x3(parseInt(seat), t.cols, total);
+      viz.forEach(v => {
+        if (a.incomp.includes(melhorMapa[v])) {
+          const par = [aId, melhorMapa[v]].sort().join('|');
+          pares.add(par);
+        }
+      });
+    }
+    toast(`Alunos embaralhados 🎲 — ⚠️ ${pares.size} restrição(ões) não puderam ser satisfeitas.`, 'error');
+  } else {
+    toast('Alunos embaralhados! Todas as restrições respeitadas ✅');
+  }
 }
 
 function limparMapa() {
