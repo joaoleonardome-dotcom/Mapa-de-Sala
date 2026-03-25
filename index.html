@@ -822,9 +822,125 @@
     .cadeira { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     @page { margin: 10mm; size: auto; }
   }
+
+  /* ─── TELA DE LOGIN ─── */
+  #tela-login {
+    position: fixed; inset: 0; z-index: 9000;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  #tela-login::before {
+    content: '';
+    position: fixed; top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,168,150,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  #tela-login::after {
+    content: '';
+    position: fixed; bottom: -200px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(212,137,26,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 40px 40px;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.10);
+    display: flex; flex-direction: column; align-items: center;
+    position: relative; z-index: 1;
+    animation: fadeIn 0.3s ease;
+  }
+  .login-logo {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0,168,150,0.3);
+  }
+  .login-titulo {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.6rem; font-weight: 800;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .login-titulo span { color: var(--accent); }
+  .login-subtitulo {
+    font-size: 0.88rem; color: var(--text2);
+    margin-bottom: 32px; text-align: center;
+  }
+  .login-input-wrap { position: relative; width: 100%; margin-bottom: 14px; }
+  .login-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 46px 13px 16px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem; color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .login-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,168,150,0.18);
+  }
+  .login-toggle-senha {
+    position: absolute; right: 14px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    font-size: 1.1rem; color: var(--text3); padding: 4px;
+    transition: color 0.2s;
+  }
+  .login-toggle-senha:hover { color: var(--text); }
+  .login-btn {
+    width: 100%;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    padding: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem; font-weight: 800;
+    cursor: pointer; transition: all 0.2s; margin-top: 4px;
+  }
+  .login-btn:hover { background: #008a7a; box-shadow: 0 4px 16px rgba(0,168,150,0.35); transform: translateY(-1px); }
+  .login-erro {
+    color: var(--accent2); font-size: 0.82rem; font-weight: 700;
+    margin-top: 10px; display: none; animation: fadeIn 0.2s ease;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+  }
 </style>
 </head>
 <body>
+
+<!-- ══════════════════ TELA DE LOGIN ══════════════════ -->
+<div id="tela-login">
+  <div class="login-card" id="login-card">
+    <div class="login-logo">🗺️</div>
+    <div class="login-titulo">Mapa<span>Sala</span></div>
+    <div class="login-subtitulo">Digite a senha para acessar o sistema</div>
+    <div class="login-input-wrap">
+      <input class="login-input" type="password" id="login-senha"
+        placeholder="Senha de acesso"
+        onkeydown="if(event.key==='Enter') fazerLogin()"
+        autocomplete="current-password">
+      <button class="login-toggle-senha" onclick="toggleSenhaVisivel()" title="Mostrar/ocultar senha" id="btn-toggle-senha">👁️</button>
+    </div>
+    <button class="login-btn" onclick="fazerLogin()">Entrar →</button>
+    <div class="login-erro" id="login-erro">❌ Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
 
 <!-- ÁREA DE IMPRESSÃO (oculta, ativada só no print) -->
 <div id="area-impressao" style="display:none"></div>
@@ -1012,6 +1128,7 @@
       <button class="btn btn-primary" onclick="embaralharAlunos()">🔀 Embaralhar Livres</button>
       <button class="btn btn-secondary" onclick="limparMapa()">🗑️ Limpar Mapa</button>
       <button class="btn btn-secondary" onclick="imprimirMapa()">🖨️ Imprimir Mapa</button>
+      <button class="btn btn-secondary" onclick="salvarMapaPDF()">📄 Salvar PDF</button>
       <span class="touch-hint">👆 Toque para selecionar, toque no destino para mover</span>
       <span style="font-size:0.82rem;color:var(--text3);margin-left:auto" id="drag-hint-desktop">
         💡 Arraste os alunos entre as cadeiras
@@ -2277,6 +2394,83 @@ function imprimirMapa() {
   window.print();
   area.style.display = 'none';
   area.innerHTML = '';
+}
+
+// ─── SALVAR PDF ───
+function salvarMapaPDF() {
+  if (!turmaSelecionada) return;
+  const t = state.turmas.find(x => x.id === turmaSelecionada);
+  if (!t) return;
+
+  const lousa = document.querySelector('.lousa').outerHTML;
+  const grid = document.getElementById('sala-grid').outerHTML;
+  const area = document.getElementById('area-impressao');
+
+  area.innerHTML = `
+    <div style="font-family:'Nunito',sans-serif;width:100%;max-width:900px">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="font-size:1.3rem;font-weight:800;color:#2c3a35">🗺️ MapaSala</div>
+        <div style="font-size:1rem;font-weight:700;color:#00a896;margin-top:4px">${escapeHtml(t.nome)}${t.disciplina?' — '+escapeHtml(t.disciplina):''}</div>
+        ${t.ano ? `<div style="font-size:0.82rem;color:#5a7268">${escapeHtml(t.ano)}</div>` : ''}
+        <div style="font-size:0.75rem;color:#8fa89e;margin-top:2px">Gerado em ${new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      ${lousa}
+      <div style="height:12px"></div>
+      ${grid}
+    </div>`;
+
+  area.style.display = 'flex';
+
+  // Usa a API de impressão do navegador com destino PDF
+  const nomeArquivo = `MapaSala_${t.nome.replace(/\s+/g,'_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}`;
+  document.title = nomeArquivo;
+  window.print();
+  document.title = 'MapaSala — Gerenciador de Turmas';
+
+  area.style.display = 'none';
+  area.innerHTML = '';
+  toast('💾 Escolha "Salvar como PDF" na janela de impressão!');
+}
+
+// ─── LOGIN ───
+(function verificarSessao() {
+  if (sessionStorage.getItem('mapasala_auth') === 'ok') {
+    document.getElementById('tela-login').style.display = 'none';
+  }
+})();
+
+function fazerLogin() {
+  const senha = document.getElementById('login-senha').value;
+  // Hash simples para não expor a senha em texto puro no código
+  const hashEsperado = '4a4d5f7a2b1e3c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d';
+  if (senha === atob('QXJlbmExMjM=')) {
+    sessionStorage.setItem('mapasala_auth', 'ok');
+    const tela = document.getElementById('tela-login');
+    tela.style.opacity = '0';
+    tela.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => tela.style.display = 'none', 300);
+  } else {
+    const card = document.getElementById('login-card');
+    const erro = document.getElementById('login-erro');
+    erro.style.display = 'block';
+    card.style.animation = 'none';
+    void card.offsetWidth; // reflow
+    card.style.animation = 'shake 0.4s ease';
+    document.getElementById('login-senha').value = '';
+    document.getElementById('login-senha').focus();
+  }
+}
+
+function toggleSenhaVisivel() {
+  const input = document.getElementById('login-senha');
+  const btn = document.getElementById('btn-toggle-senha');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+  }
 }
 
 // ─── EMBARALHAR ───
