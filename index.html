@@ -1128,7 +1128,6 @@
       <button class="btn btn-primary" onclick="embaralharAlunos()">🔀 Embaralhar Livres</button>
       <button class="btn btn-secondary" onclick="limparMapa()">🗑️ Limpar Mapa</button>
       <button class="btn btn-secondary" onclick="imprimirMapa()">🖨️ Imprimir Mapa</button>
-      <button class="btn btn-secondary" onclick="salvarMapaPDF()">📄 Salvar PDF</button>
       <span class="touch-hint">👆 Toque para selecionar, toque no destino para mover</span>
       <span style="font-size:0.82rem;color:var(--text3);margin-left:auto" id="drag-hint-desktop">
         💡 Arraste os alunos entre as cadeiras
@@ -2397,41 +2396,6 @@ function imprimirMapa() {
 }
 
 // ─── SALVAR PDF ───
-function salvarMapaPDF() {
-  if (!turmaSelecionada) return;
-  const t = state.turmas.find(x => x.id === turmaSelecionada);
-  if (!t) return;
-
-  const lousa = document.querySelector('.lousa').outerHTML;
-  const grid = document.getElementById('sala-grid').outerHTML;
-  const area = document.getElementById('area-impressao');
-
-  area.innerHTML = `
-    <div style="font-family:'Nunito',sans-serif;width:100%;max-width:900px">
-      <div style="text-align:center;margin-bottom:18px">
-        <div style="font-size:1.3rem;font-weight:800;color:#2c3a35">🗺️ MapaSala</div>
-        <div style="font-size:1rem;font-weight:700;color:#00a896;margin-top:4px">${escapeHtml(t.nome)}${t.disciplina?' — '+escapeHtml(t.disciplina):''}</div>
-        ${t.ano ? `<div style="font-size:0.82rem;color:#5a7268">${escapeHtml(t.ano)}</div>` : ''}
-        <div style="font-size:0.75rem;color:#8fa89e;margin-top:2px">Gerado em ${new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-      </div>
-      ${lousa}
-      <div style="height:12px"></div>
-      ${grid}
-    </div>`;
-
-  area.style.display = 'flex';
-
-  // Usa a API de impressão do navegador com destino PDF
-  const nomeArquivo = `MapaSala_${t.nome.replace(/\s+/g,'_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}`;
-  document.title = nomeArquivo;
-  window.print();
-  document.title = 'MapaSala — Gerenciador de Turmas';
-
-  area.style.display = 'none';
-  area.innerHTML = '';
-  toast('💾 Escolha "Salvar como PDF" na janela de impressão!');
-}
-
 // ─── LOGIN ───
 (function verificarSessao() {
   if (sessionStorage.getItem('mapasala_auth') === 'ok') {
