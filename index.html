@@ -580,6 +580,123 @@
   .dot-vision { background: var(--accent3); }
   .dot-conc { background: var(--accent4); }
 
+  /* ─── MAPA DE PROVA ─── */
+  .prova-controles {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px;
+  }
+  .prova-salas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+    margin-top: 8px;
+  }
+  .prova-sala-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .prova-sala-header {
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    color: #fff;
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .prova-sala-titulo {
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem; font-weight: 700;
+  }
+  .prova-sala-meta { font-size: 0.78rem; opacity: 0.85; }
+  .prova-sala-body { padding: 14px; }
+  .prova-grid {
+    display: grid;
+    gap: 7px;
+  }
+  .prova-cadeira {
+    height: 68px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+    user-select: none;
+    font-size: 0.68rem; font-weight: 700;
+    text-align: center; padding: 0 4px;
+    line-height: 1.3;
+  }
+  .prova-cadeira.empty {
+    background: var(--card-empty);
+    border-color: var(--border);
+    border-style: dashed;
+    cursor: default;
+  }
+  .prova-cadeira.occupied {
+    background: linear-gradient(145deg, #c8ede8, #b0e0d8);
+    border-color: rgba(0,168,150,0.5);
+    box-shadow: 0 2px 8px rgba(0,168,150,0.12);
+  }
+  .prova-cadeira.occupied:hover {
+    border-color: var(--accent);
+    transform: scale(1.04);
+    box-shadow: 0 4px 16px rgba(0,168,150,0.22);
+  }
+  .prova-cadeira.prova-selecionada {
+    border-color: var(--accent) !important;
+    border-style: solid !important;
+    box-shadow: 0 0 0 3px rgba(0,168,150,0.3) !important;
+    transform: scale(1.06) !important;
+  }
+  .prova-cadeira-num {
+    position: absolute; top: 4px; left: 6px;
+    font-size: 0.58rem; color: var(--text3); font-weight: 700;
+  }
+  .prova-cadeira-turma {
+    position: absolute; bottom: 4px; right: 5px;
+    font-size: 0.55rem; font-weight: 800;
+    background: rgba(0,168,150,0.15); color: #007a6e;
+    border-radius: 4px; padding: 1px 4px;
+  }
+  .prova-lousa {
+    background: linear-gradient(135deg, #c8ede8, #a8ddd6);
+    border: 2px solid rgba(0,168,150,0.4);
+    border-radius: 6px;
+    padding: 7px 12px;
+    text-align: center;
+    font-size: 0.72rem; font-weight: 700;
+    color: #006a60;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .prova-sobra {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-top: 20px;
+  }
+  .prova-sobra-titulo {
+    font-size: 0.78rem; font-weight: 800; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;
+  }
+  .prova-sobra-lista {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .prova-chip {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 0.78rem; font-weight: 700; color: var(--text);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .prova-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .prova-chip.prova-selecionada {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+
   /* Responsivo */
   @media (max-width: 600px) {
     main { padding: 16px; }
@@ -962,6 +1079,7 @@
     <button class="tab-btn" onclick="showTab('turmas', event)">🏫 Turmas</button>
     <button class="tab-btn" onclick="showTab('alunos', event)">👥 Alunos</button>
     <button class="tab-btn" onclick="showTab('mapa', event)">🪑 Mapa</button>
+    <button class="tab-btn" onclick="showTab('prova', event)">📝 Mapa de Prova</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;min-width:120px">
     <button id="btn-instalar-pwa" style="display:none;align-items:center;gap:6px;
@@ -1149,6 +1267,56 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- ══════════════════ TAB: MAPA DE PROVA ══════════════════ -->
+<div id="tab-prova" class="tab-panel">
+
+  <div class="section-header">
+    <div>
+      <div class="section-title">📝 Mapa de Prova</div>
+      <div style="font-size:0.85rem;color:var(--text2);margin-top:4px">
+        Misture alunos de um mesmo ano e distribua nas salas disponíveis
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="imprimirProva()">🖨️ Imprimir Mapa</button>
+  </div>
+
+  <!-- Controles -->
+  <div class="prova-controles">
+    <div class="form-group" style="min-width:200px;flex:1">
+      <label>Ano / Série</label>
+      <select id="prova-select-ano" onchange="provaAnoChanged()">
+        <option value="">Selecione o ano…</option>
+      </select>
+    </div>
+    <div class="form-group" style="min-width:160px;flex:1">
+      <label>Salas disponíveis</label>
+      <div id="prova-salas-check" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px"></div>
+    </div>
+    <button class="btn btn-primary" onclick="embaralharProva()" id="btn-embaralhar-prova" disabled>
+      🔀 Embaralhar e Distribuir
+    </button>
+    <button class="btn btn-secondary" onclick="limparProva()" id="btn-limpar-prova" style="display:none">
+      🗑️ Limpar
+    </button>
+  </div>
+
+  <!-- Estado vazio -->
+  <div id="prova-empty" class="empty-state">
+    <div class="emo">📝</div>
+    <p>Selecione um ano e as salas, depois clique em <strong>Embaralhar e Distribuir</strong>.</p>
+  </div>
+
+  <!-- Resultado -->
+  <div id="prova-resultado" style="display:none">
+    <div id="prova-salas-grid" class="prova-salas-grid"></div>
+    <div id="prova-sobra-wrap" class="prova-sobra" style="display:none">
+      <div class="prova-sobra-titulo">⚠️ Alunos sem sala (capacidade excedida)</div>
+      <div id="prova-sobra-lista" class="prova-sobra-lista"></div>
+    </div>
+  </div>
+
 </div>
 
 </main>
@@ -1435,6 +1603,7 @@ function showTab(name, ev) {
   if (name === 'mapa') { renderSelectTurmaMapa(); renderMapa(); }
   if (name === 'turmas') renderTurmas();
   if (name === 'dashboard') renderDashboard();
+  if (name === 'prova') renderProvaAnosSelect();
 }
 function showTabDireto(name) {
   showTab(name);
@@ -2389,6 +2558,288 @@ function imprimirMapa() {
       ${grid}
     </div>`;
 
+  area.style.display = 'flex';
+  window.print();
+  area.style.display = 'none';
+  area.innerHTML = '';
+}
+
+// ═══════════════════════════════════════════
+// MAPA DE PROVA
+// ═══════════════════════════════════════════
+let provaState = {
+  alocacao: {},   // { turmaId: { seatIdx: { alunoId, turmaOrigem } } }
+  salasSelecionadas: [],
+  anoSelecionado: ''
+};
+let provaTouchSel = null; // { alunoId, turmaOrigem, fromSala, fromSeat } | { chip: true, alunoId, turmaOrigem }
+
+function renderProvaAnosSelect() {
+  const sel = document.getElementById('prova-select-ano');
+  if (!sel) return;
+  // Extrai anos únicos das turmas
+  const anos = [...new Set(state.turmas.map(t => (t.ano || '').trim()).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Selecione o ano…</option>' +
+    anos.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+}
+
+function provaAnoChanged() {
+  const ano = document.getElementById('prova-select-ano').value;
+  provaState.anoSelecionado = ano;
+  provaState.salasSelecionadas = [];
+
+  const wrap = document.getElementById('prova-salas-check');
+  if (!ano) { wrap.innerHTML = ''; document.getElementById('btn-embaralhar-prova').disabled = true; return; }
+
+  // Turmas com esse ano
+  const turmasdoAno = state.turmas.filter(t => (t.ano || '').trim() === ano);
+  if (!turmasdoAno.length) {
+    wrap.innerHTML = '<span style="font-size:0.82rem;color:var(--text3)">Nenhuma turma encontrada para este ano.</span>';
+    document.getElementById('btn-embaralhar-prova').disabled = true;
+    return;
+  }
+
+  wrap.innerHTML = turmasdoAno.map(t => `
+    <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+      background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;
+      padding:6px 12px;font-size:0.82rem;font-weight:700;transition:all 0.15s"
+      id="label-sala-${t.id}">
+      <input type="checkbox" value="${t.id}" onchange="provaSalaToggle(this)"
+        style="accent-color:var(--accent)">
+      ${escapeHtml(t.nome)} (${t.cols}×${t.rows})
+    </label>`).join('');
+
+  document.getElementById('btn-embaralhar-prova').disabled = true;
+}
+
+function provaSalaToggle(checkbox) {
+  const id = checkbox.value;
+  const label = document.getElementById('label-sala-' + id);
+  if (checkbox.checked) {
+    provaState.salasSelecionadas.push(id);
+    if (label) { label.style.borderColor = 'var(--accent)'; label.style.background = 'rgba(0,168,150,0.08)'; }
+  } else {
+    provaState.salasSelecionadas = provaState.salasSelecionadas.filter(x => x !== id);
+    if (label) { label.style.borderColor = 'var(--border)'; label.style.background = 'var(--surface2)'; }
+  }
+  document.getElementById('btn-embaralhar-prova').disabled = provaState.salasSelecionadas.length === 0;
+}
+
+function embaralharProva() {
+  const ano = provaState.anoSelecionado;
+  const salaIds = provaState.salasSelecionadas;
+  if (!ano || !salaIds.length) return;
+
+  // Todos os alunos do ano selecionado (de todas as turmas desse ano)
+  const turmasDoAno = state.turmas.filter(t => (t.ano || '').trim() === ano);
+  let todosAlunos = [];
+  turmasDoAno.forEach(t => {
+    state.alunos
+      .filter(a => a.turmaId === t.id)
+      .forEach(a => todosAlunos.push({ ...a, turmaOrigem: t.nome }));
+  });
+
+  // Separar fixos dos livres para embaralhar
+  const fixos = todosAlunos.filter(a => a.tipo === 'fixed');
+  const vision = todosAlunos.filter(a => a.tipo === 'vision');
+  const outros = todosAlunos.filter(a => a.tipo !== 'fixed' && a.tipo !== 'vision');
+
+  // Embaralhar livres
+  shuffleArr(vision);
+  shuffleArr(outros);
+  const ordenados = [...vision, ...outros, ...fixos];
+
+  // Distribuir nas salas: preenche frente→fundo, sala por sala
+  const novaAlocacao = {};
+  salaIds.forEach(id => { novaAlocacao[id] = {}; });
+
+  let alunoIdx = 0;
+  for (const salaId of salaIds) {
+    const t = state.turmas.find(x => x.id === salaId);
+    if (!t) continue;
+    const total = t.cols * t.rows;
+    for (let seat = 0; seat < total && alunoIdx < ordenados.length; seat++) {
+      novaAlocacao[salaId][seat] = ordenados[alunoIdx++];
+    }
+  }
+
+  provaState.alocacao = novaAlocacao;
+  provaTouchSel = null;
+  renderProvaResultado();
+
+  document.getElementById('prova-empty').style.display = 'none';
+  document.getElementById('prova-resultado').style.display = 'block';
+  document.getElementById('btn-limpar-prova').style.display = 'inline-flex';
+
+  // Alunos sem sala
+  const sobra = ordenados.slice(alunoIdx);
+  const sobraWrap = document.getElementById('prova-sobra-wrap');
+  const sobraLista = document.getElementById('prova-sobra-lista');
+  if (sobra.length) {
+    sobraLista.innerHTML = sobra.map(a =>
+      `<span class="prova-chip">${escapeHtml(a.nome)} <span style="opacity:0.6;font-size:0.7rem">(${escapeHtml(a.turmaOrigem)})</span></span>`
+    ).join('');
+    sobraWrap.style.display = 'block';
+  } else {
+    sobraWrap.style.display = 'none';
+  }
+
+  toast(`✅ ${ordenados.length} alunos distribuídos em ${salaIds.length} sala(s)!`);
+}
+
+function renderProvaResultado() {
+  const grid = document.getElementById('prova-salas-grid');
+  grid.innerHTML = '';
+
+  provaState.salasSelecionadas.forEach(salaId => {
+    const t = state.turmas.find(x => x.id === salaId);
+    if (!t) return;
+    const total = t.cols * t.rows;
+    const alocacao = provaState.alocacao[salaId] || {};
+    const ocupados = Object.values(alocacao).filter(Boolean).length;
+
+    let cadeirasHtml = '';
+    for (let i = 0; i < total; i++) {
+      const aluno = alocacao[i];
+      if (aluno) {
+        const firstName = aluno.nome.split(' ')[0];
+        const lastName = aluno.nome.split(' ').slice(1).join(' ');
+        cadeirasHtml += `
+          <div class="prova-cadeira occupied" data-sala="${salaId}" data-seat="${i}"
+            onclick="provaClicarCadeira('${salaId}', ${i})">
+            <span class="prova-cadeira-num">${i+1}</span>
+            <strong>${escapeHtml(firstName)}</strong>${lastName ? ' '+escapeHtml(lastName) : ''}
+            <span class="prova-cadeira-turma">${escapeHtml(aluno.turmaOrigem)}</span>
+          </div>`;
+      } else {
+        cadeirasHtml += `
+          <div class="prova-cadeira empty" data-sala="${salaId}" data-seat="${i}"
+            onclick="provaClicarCadeira('${salaId}', ${i})">
+            <span class="prova-cadeira-num">${i+1}</span>
+          </div>`;
+      }
+    }
+
+    const card = document.createElement('div');
+    card.className = 'prova-sala-card';
+    card.innerHTML = `
+      <div class="prova-sala-header">
+        <div class="prova-sala-titulo">🏫 ${escapeHtml(t.nome)}</div>
+        <div class="prova-sala-meta">${ocupados}/${total} alunos</div>
+      </div>
+      <div class="prova-sala-body">
+        <div class="prova-lousa">⬛ LOUSA / QUADRO ⬛</div>
+        <div class="prova-grid" style="grid-template-columns:repeat(${t.cols},1fr)">${cadeirasHtml}</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function provaClicarCadeira(salaId, seatIdx) {
+  const alocacao = provaState.alocacao[salaId] || {};
+  const aluno = alocacao[seatIdx] || null;
+
+  if (!provaTouchSel) {
+    // Primeira seleção — precisa ter aluno
+    if (!aluno) return;
+    provaTouchSel = { alunoId: aluno.id, turmaOrigem: aluno.turmaOrigem, fromSala: salaId, fromSeat: seatIdx };
+    // Destacar cadeira
+    document.querySelectorAll('.prova-cadeira, .prova-chip').forEach(el => el.classList.remove('prova-selecionada'));
+    const cel = document.querySelector(`.prova-cadeira[data-sala="${salaId}"][data-seat="${seatIdx}"]`);
+    if (cel) cel.classList.add('prova-selecionada');
+    toast(`👆 Toque no destino para mover ${aluno.nome.split(' ')[0]}`);
+  } else {
+    // Segunda seleção — mover
+    const { fromSala, fromSeat } = provaTouchSel;
+    const alunoMovendo = provaState.alocacao[fromSala][fromSeat];
+
+    if (fromSala === salaId && fromSeat === seatIdx) {
+      // Mesma cadeira: cancelar
+      provaTouchSel = null;
+      document.querySelectorAll('.prova-cadeira, .prova-chip').forEach(el => el.classList.remove('prova-selecionada'));
+      return;
+    }
+
+    // Trocar (se destino ocupado, faz swap)
+    const alunoDestino = provaState.alocacao[salaId]?.[seatIdx] || null;
+    provaState.alocacao[salaId][seatIdx] = alunoMovendo;
+    if (alunoDestino) {
+      provaState.alocacao[fromSala][fromSeat] = alunoDestino;
+    } else {
+      delete provaState.alocacao[fromSala][fromSeat];
+    }
+
+    provaTouchSel = null;
+    document.querySelectorAll('.prova-cadeira, .prova-chip').forEach(el => el.classList.remove('prova-selecionada'));
+    renderProvaResultado();
+    toast(`✅ ${alunoMovendo.nome.split(' ')[0]} movido!`);
+  }
+}
+
+function limparProva() {
+  provaState.alocacao = {};
+  provaTouchSel = null;
+  document.getElementById('prova-resultado').style.display = 'none';
+  document.getElementById('prova-empty').style.display = 'block';
+  document.getElementById('btn-limpar-prova').style.display = 'none';
+  // Desmarcar checkboxes
+  document.querySelectorAll('#prova-salas-check input[type=checkbox]').forEach(c => {
+    c.checked = false;
+    const label = document.getElementById('label-sala-' + c.value);
+    if (label) { label.style.borderColor = 'var(--border)'; label.style.background = 'var(--surface2)'; }
+  });
+  provaState.salasSelecionadas = [];
+  document.getElementById('btn-embaralhar-prova').disabled = true;
+}
+
+function imprimirProva() {
+  if (!document.getElementById('prova-resultado') || document.getElementById('prova-resultado').style.display === 'none') {
+    toast('Gere o mapa de prova primeiro!', 'error'); return;
+  }
+  const area = document.getElementById('area-impressao');
+  let html = `<div style="font-family:'Nunito',sans-serif;width:100%">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:1.3rem;font-weight:800;color:#2c3a35">📝 Mapa de Prova — MapaSala</div>
+      <div style="font-size:0.9rem;color:#00a896;font-weight:700;margin-top:4px">${escapeHtml(provaState.anoSelecionado)}</div>
+      <div style="font-size:0.75rem;color:#8fa89e;margin-top:2px">Gerado em ${new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px">`;
+
+  provaState.salasSelecionadas.forEach(salaId => {
+    const t = state.turmas.find(x => x.id === salaId);
+    if (!t) return;
+    const total = t.cols * t.rows;
+    const alocacao = provaState.alocacao[salaId] || {};
+    const ocupados = Object.values(alocacao).filter(Boolean).length;
+
+    let cadeirasHtml = '';
+    for (let i = 0; i < total; i++) {
+      const aluno = alocacao[i];
+      if (aluno) {
+        cadeirasHtml += `<div style="height:56px;border-radius:10px;background:linear-gradient(145deg,#c8ede8,#b0e0d8);border:1.5px solid rgba(0,168,150,0.4);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;text-align:center;padding:2px 4px;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+          <span style="position:absolute;top:3px;left:5px;font-size:0.5rem;color:#8fa89e">${i+1}</span>
+          <strong>${escapeHtml(aluno.nome.split(' ')[0])}</strong>${aluno.nome.split(' ').slice(1).join(' ') ? ' '+escapeHtml(aluno.nome.split(' ').slice(1).join(' ')) : ''}
+          <span style="font-size:0.52rem;background:rgba(0,168,150,0.15);color:#007a6e;border-radius:3px;padding:1px 4px;margin-top:2px">${escapeHtml(aluno.turmaOrigem)}</span>
+        </div>`;
+      } else {
+        cadeirasHtml += `<div style="height:56px;border-radius:10px;background:#ede7d6;border:1.5px dashed #c9bfa8"></div>`;
+      }
+    }
+
+    html += `<div style="break-inside:avoid">
+      <div style="background:linear-gradient(135deg,#007f74,#00c9a7);color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:0.9rem">${escapeHtml(t.nome)}</strong>
+        <span style="font-size:0.75rem;opacity:0.85">${ocupados}/${total}</span>
+      </div>
+      <div style="border:1.5px solid #c9bfa8;border-top:none;border-radius:0 0 10px 10px;padding:12px">
+        <div style="background:linear-gradient(135deg,#c8ede8,#a8ddd6);border:1px solid rgba(0,168,150,0.3);border-radius:5px;padding:5px;text-align:center;font-size:0.65rem;font-weight:700;color:#006a60;letter-spacing:0.08em;margin-bottom:8px">⬛ LOUSA ⬛</div>
+        <div style="display:grid;grid-template-columns:repeat(${t.cols},1fr);gap:5px">${cadeirasHtml}</div>
+      </div>
+    </div>`;
+  });
+
+  html += '</div></div>';
+  area.innerHTML = html;
   area.style.display = 'flex';
   window.print();
   area.style.display = 'none';
