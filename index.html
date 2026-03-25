@@ -2574,40 +2574,69 @@ let provaState = {
 };
 let provaTouchSel = null; // { alunoId, turmaOrigem, fromSala, fromSeat } | { chip: true, alunoId, turmaOrigem }
 
+function extrairSerie(nomeTurma) {
+  // Extrai o ano/série do nome da turma
+  // Exemplos: "6º Ano A" → "6º Ano", "7° Ano B" → "7° Ano", "9º A" → "9º", "Turma 8B" → "Turma 8"
+  // Estratégia: remove sufixos de letra final (A, B, C...) e retorna o restante como série
+  const nome = nomeTurma.trim();
+  // Padrão mais comum: termina em letra ou número de turma (A, B, C, 1, 2...)
+  // Remove o último token se for só uma letra ou "Turma X"
+  const match = nome.match(/^(.+?)\s*[–\-]?\s*[A-Za-z]?\d?$/);
+  // Tenta padrão "Xº Ano A" → "Xº Ano"
+  const m1 = nome.match(/^(\d+[°º°]\s*[Aa]no)\s+\S+$/i);
+  if (m1) return m1[1].trim();
+  // Padrão "6º A", "7° B" → "6º", "7°"
+  const m2 = nome.match(/^(\d+[°º°])\s+\S+$/i);
+  if (m2) return m2[1].trim();
+  // Padrão "Turma 6A" → "Turma 6"
+  const m3 = nome.match(/^(.*?\d+)[A-Za-z]?$/i);
+  if (m3) return m3[1].trim();
+  return nome;
+}
+
 function renderProvaAnosSelect() {
   const sel = document.getElementById('prova-select-ano');
   if (!sel) return;
-  // Extrai anos únicos das turmas
-  const anos = [...new Set(state.turmas.map(t => (t.ano || '').trim()).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">Selecione o ano…</option>' +
-    anos.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+  // Agrupa turmas por série extraída do nome
+  const series = [...new Set(state.turmas.map(t => extrairSerie(t.nome)))].sort();
+  sel.innerHTML = '<option value="">Selecione o ano/série…</option>' +
+    series.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
 function provaAnoChanged() {
-  const ano = document.getElementById('prova-select-ano').value;
-  provaState.anoSelecionado = ano;
+  const serie = document.getElementById('prova-select-ano').value;
+  provaState.anoSelecionado = serie;
   provaState.salasSelecionadas = [];
 
   const wrap = document.getElementById('prova-salas-check');
-  if (!ano) { wrap.innerHTML = ''; document.getElementById('btn-embaralhar-prova').disabled = true; return; }
+  if (!serie) { wrap.innerHTML = ''; document.getElementById('btn-embaralhar-prova').disabled = true; return; }
 
-  // Turmas com esse ano
-  const turmasdoAno = state.turmas.filter(t => (t.ano || '').trim() === ano);
-  if (!turmasdoAno.length) {
-    wrap.innerHTML = '<span style="font-size:0.82rem;color:var(--text3)">Nenhuma turma encontrada para este ano.</span>';
+  // Turmas cujo nome pertence a essa série
+  const turmasDaSerie = state.turmas.filter(t => extrairSerie(t.nome) === serie);
+  if (!turmasDaSerie.length) {
+    wrap.innerHTML = '<span style="font-size:0.82rem;color:var(--text3)">Nenhuma turma encontrada para esta série.</span>';
     document.getElementById('btn-embaralhar-prova').disabled = true;
     return;
   }
 
-  wrap.innerHTML = turmasdoAno.map(t => `
+  const totalAlunos = state.alunos.filter(a => turmasDaSerie.some(t => t.id === a.turmaId)).length;
+
+  wrap.innerHTML = turmasDaSerie.map(t => {
+    const cap = t.cols * t.rows;
+    return `
     <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;
       background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;
       padding:6px 12px;font-size:0.82rem;font-weight:700;transition:all 0.15s"
       id="label-sala-${t.id}">
       <input type="checkbox" value="${t.id}" onchange="provaSalaToggle(this)"
         style="accent-color:var(--accent)">
-      ${escapeHtml(t.nome)} (${t.cols}×${t.rows})
-    </label>`).join('');
+      ${escapeHtml(t.nome)} <span style="font-weight:400;color:var(--text3)">(${cap} lugares)</span>
+    </label>`;
+  }).join('');
+
+  wrap.innerHTML += `<div style="width:100%;font-size:0.78rem;color:var(--text2);margin-top:6px">
+    👥 <strong>${totalAlunos}</strong> aluno(s) de ${turmasDaSerie.length} turma(s) serão misturados
+  </div>`;
 
   document.getElementById('btn-embaralhar-prova').disabled = true;
 }
@@ -2630,10 +2659,10 @@ function embaralharProva() {
   const salaIds = provaState.salasSelecionadas;
   if (!ano || !salaIds.length) return;
 
-  // Todos os alunos do ano selecionado (de todas as turmas desse ano)
-  const turmasDoAno = state.turmas.filter(t => (t.ano || '').trim() === ano);
+  // Todos os alunos da série selecionada (de todas as turmas dessa série)
+  const turmasDaSerie = state.turmas.filter(t => extrairSerie(t.nome) === provaState.anoSelecionado);
   let todosAlunos = [];
-  turmasDoAno.forEach(t => {
+  turmasDaSerie.forEach(t => {
     state.alunos
       .filter(a => a.turmaId === t.id)
       .forEach(a => todosAlunos.push({ ...a, turmaOrigem: t.nome }));
