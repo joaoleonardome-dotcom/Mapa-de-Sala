@@ -948,8 +948,8 @@
         <input type="text" id="t-ano" placeholder="Ex: 2025, 1º Sem…" maxlength="30">
       </div>
       <div class="form-group">
-        <label>Disciplina</label>
-        <input type="text" id="t-disciplina" placeholder="Ex: Matemática" maxlength="40">
+        <label>Orientador</label>
+        <input type="text" id="t-disciplina" placeholder="Ex: Prof. João Silva" maxlength="40">
       </div>
     </div>
     <input type="hidden" id="t-edit-id">
@@ -1240,12 +1240,8 @@ function renderDashboard() {
 
 function irParaMapa(turmaId) {
   turmaSelecionada = turmaId;
-  showTabDireto('mapa');
-  renderSelectTurmaMapa();
-  // Forçar select e renderizar
-  const sel = document.getElementById('select-turma-mapa');
-  if (sel) sel.value = turmaId;
-  renderMapa();
+  showTabDireto('alunos');
+  atualizarPainelAlunos();
 }
 
 // ═══════════════════════════════════════════
