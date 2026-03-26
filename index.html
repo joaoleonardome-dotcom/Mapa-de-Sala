@@ -930,11 +930,9 @@
       position: absolute; top: 0; left: 0;
       width: 100%; height: auto;
       background: #fff;
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: flex-start;
-      padding: 24px;
+      display: block;
+      padding: 0 24px;
       z-index: 9999;
-      page-break-after: avoid;
     }
     .cadeira { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     @page { margin: 10mm; size: auto; }
@@ -2847,25 +2845,25 @@ function imprimirProva() {
     const ocupados = alunos.length;
 
     const linhasHtml = alunos.map(([seatIdx, aluno], i) =>
-      `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;background:${i%2===0?'#f5f0e8':'#fdf8f0'};border:1px solid #e4dcc8;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-        <span style="font-size:0.68rem;color:#8fa89e;font-weight:700;min-width:20px;text-align:right">${parseInt(seatIdx)+1}</span>
-        <span style="flex:1;font-size:0.82rem;font-weight:700;color:#2c3a35">${escapeHtml(aluno.nome)}</span>
-        <span style="font-size:0.68rem;font-weight:800;background:rgba(0,168,150,0.12);color:#007a6e;border-radius:20px;padding:2px 7px;white-space:nowrap">${escapeHtml(aluno.turmaOrigem)}</span>
+      `<div style="display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:5px;background:${i%2===0?'#f5f0e8':'#fdf8f0'};border:1px solid #e4dcc8;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+        <span style="font-size:0.6rem;color:#8fa89e;font-weight:700;min-width:18px;text-align:right">${parseInt(seatIdx)+1}</span>
+        <span style="flex:1;font-size:0.72rem;font-weight:700;color:#2c3a35">${escapeHtml(aluno.nome)}</span>
+        <span style="font-size:0.6rem;font-weight:800;background:rgba(0,168,150,0.12);color:#007a6e;border-radius:20px;padding:1px 6px;white-space:nowrap">${escapeHtml(aluno.turmaOrigem)}</span>
       </div>`
     ).join('');
 
     const isLast = provaState.salasSelecionadas.indexOf(salaId) === provaState.salasSelecionadas.length - 1;
-    html += `<div style="page-break-after:${isLast ? 'avoid' : 'always'};page-break-inside:avoid;padding:24px 0">
-      <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:1.2rem;font-weight:800;color:#2c3a35">📝 Mapa de Prova — MapaSala</div>
-        <div style="font-size:0.85rem;color:#00a896;font-weight:700;margin-top:3px">${escapeHtml(provaState.anoSelecionado)}</div>
-        <div style="font-size:0.7rem;color:#8fa89e;margin-top:2px">Gerado em ${dataGeracao}</div>
+    html += `<div style="page-break-after:${isLast ? 'avoid' : 'always'};page-break-inside:avoid;padding:12px 0">
+      <div style="text-align:center;margin-bottom:10px">
+        <div style="font-size:1rem;font-weight:800;color:#2c3a35">📝 Mapa de Prova — MapaSala</div>
+        <div style="font-size:0.75rem;color:#00a896;font-weight:700;margin-top:2px">${escapeHtml(provaState.anoSelecionado)}</div>
+        <div style="font-size:0.65rem;color:#8fa89e;margin-top:1px">Gerado em ${dataGeracao}</div>
       </div>
-      <div style="background:linear-gradient(135deg,#007f74,#00c9a7);color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-        <strong style="font-size:0.9rem">🏫 ${escapeHtml(t.nome)}</strong>
-        <span style="font-size:0.75rem;opacity:0.85">${ocupados} aluno(s)</span>
+      <div style="background:linear-gradient(135deg,#007f74,#00c9a7);color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+        <strong style="font-size:0.82rem">🏫 ${escapeHtml(t.nome)}</strong>
+        <span style="font-size:0.7rem;opacity:0.85">${ocupados} aluno(s)</span>
       </div>
-      <div style="border:1.5px solid #c9bfa8;border-top:none;border-radius:0 0 10px 10px;padding:10px;display:flex;flex-direction:column;gap:4px">
+      <div style="border:1.5px solid #c9bfa8;border-top:none;border-radius:0 0 8px 8px;padding:6px;display:flex;flex-direction:column;gap:2px">
         ${linhasHtml}
       </div>
     </div>`;
@@ -2873,7 +2871,7 @@ function imprimirProva() {
 
   html += '</div>';
   area.innerHTML = html;
-  area.style.display = 'flex';
+  area.style.display = 'block';
   window.print();
   area.style.display = 'none';
   area.innerHTML = '';
