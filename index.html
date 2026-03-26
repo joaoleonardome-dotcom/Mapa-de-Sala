@@ -619,6 +619,14 @@
   .prova-sala-chk.checked .prova-sala-chk-icon {
     background: var(--accent); border-color: var(--accent); color: #fff;
   }
+  .prova-sala-origem {
+    border-style: dashed;
+    opacity: 0.6;
+  }
+  .prova-sala-origem::after {
+    content: ' ⚠️';
+    font-size: 0.7rem;
+  }
   .prova-info-strip {
     font-size: 0.78rem; color: var(--text2); margin-top: 8px;
     display: flex; align-items: center; gap: 6px;
@@ -2689,31 +2697,45 @@ function provaAnoChanged() {
   provaState.salasSelecionadas = [];
 
   const wrap = document.getElementById('prova-salas-check');
-  if (!serie) { wrap.innerHTML = ''; document.getElementById('btn-embaralhar-prova').disabled = true; return; }
+  const infoStrip = document.getElementById('prova-info-strip');
 
-  // Turmas cujo nome pertence a essa série
+  if (!serie) {
+    wrap.innerHTML = '';
+    infoStrip.style.display = 'none';
+    document.getElementById('btn-embaralhar-prova').disabled = true;
+    return;
+  }
+
+  // Alunos que serão misturados (apenas da série selecionada)
   const turmasDaSerie = state.turmas.filter(t => extrairSerie(t.nome) === serie);
   if (!turmasDaSerie.length) {
     wrap.innerHTML = '<span style="font-size:0.82rem;color:var(--text3)">Nenhuma turma encontrada para esta série.</span>';
     document.getElementById('btn-embaralhar-prova').disabled = true;
     return;
   }
-
   const totalAlunos = state.alunos.filter(a => turmasDaSerie.some(t => t.id === a.turmaId)).length;
 
-  wrap.innerHTML = turmasDaSerie.map(t => {
+  // Salas disponíveis = TODAS as turmas cadastradas (para não misturar origem e destino)
+  const todasTurmas = state.turmas;
+  if (!todasTurmas.length) {
+    wrap.innerHTML = '<span style="font-size:0.82rem;color:var(--text3)">Nenhuma sala cadastrada.</span>';
+    document.getElementById('btn-embaralhar-prova').disabled = true;
+    return;
+  }
+
+  wrap.innerHTML = todasTurmas.map(t => {
     const cap = t.cols * t.rows;
+    const isDaSerie = turmasDaSerie.some(x => x.id === t.id);
     return `
-    <label class="prova-sala-chk" id="label-sala-${t.id}" onclick="provaSalaToggle(this, '${t.id}')">
+    <label class="prova-sala-chk${isDaSerie ? ' prova-sala-origem' : ''}" id="label-sala-${t.id}" onclick="provaSalaToggle(this, '${t.id}')">
       <input type="checkbox" value="${t.id}">
       <span class="prova-sala-chk-icon">✓</span>
-      ${escapeHtml(t.nome)} <span style="font-weight:400;color:var(--text3);margin-left:3px">(${cap})</span>
+      ${escapeHtml(t.nome)} <span style="font-weight:400;color:var(--text3);margin-left:3px">(${cap} lug.)</span>
     </label>`;
   }).join('');
 
-  const infoStrip = document.getElementById('prova-info-strip');
   infoStrip.style.display = 'flex';
-  infoStrip.innerHTML = `👥 <strong>${totalAlunos}</strong> aluno(s) de ${turmasDaSerie.length} turma(s) serão misturados`;
+  infoStrip.innerHTML = `👥 <strong>${totalAlunos}</strong> aluno(s) do <strong>${escapeHtml(serie)}</strong> serão distribuídos nas salas marcadas`;
 
   document.getElementById('btn-embaralhar-prova').disabled = true;
 }
