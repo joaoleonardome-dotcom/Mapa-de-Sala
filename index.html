@@ -1935,6 +1935,17 @@ function showTab(name, ev) {
   if (name === 'turmas') renderTurmas();
   if (name === 'dashboard') renderDashboard();
   if (name === 'prova') renderProvaAnosSelect();
+  if (name === 'config') {
+    renderConfigTipos();
+    const cfg = getConfigProva();
+    const cfgSalas = document.getElementById('cfg-prova-salas');
+    const cfgCap   = document.getElementById('cfg-prova-cap');
+    const cfgMax   = document.getElementById('cfg-prova-max');
+    if (cfgSalas) cfgSalas.value = cfg.salas;
+    if (cfgCap)   cfgCap.value   = cfg.cap;
+    if (cfgMax)   cfgMax.value   = cfg.max;
+    atualizarBotoesTema(localStorage.getItem('mapasala_tema') || 'light');
+  }
 }
 function showTabDireto(name) {
   showTab(name);
@@ -3212,9 +3223,8 @@ function imprimirProva() {
 
 function fazerLogin() {
   const senha = document.getElementById('login-senha').value;
-  // Hash simples para não expor a senha em texto puro no código
-  const hashEsperado = '4a4d5f7a2b1e3c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d';
-  if (senha === atob('QXJlbmExMjM=')) {
+  const senhaEsperada = localStorage.getItem('mapasala_senha_custom') || atob('QXJlbmExMjM=');
+  if (senha === senhaEsperada) {
     sessionStorage.setItem('mapasala_auth', 'ok');
     const tela = document.getElementById('tela-login');
     tela.style.opacity = '0';
@@ -3600,29 +3610,7 @@ function trocarSenha() {
   setTimeout(() => { msgEl.style.display = 'none'; }, 4000);
 }
 
-// Patch no login para usar senha salva
-const _fazerLoginOrig = fazerLogin;
-// Substituir fazerLogin para considerar senha custom
-function fazerLogin() {
-  const senha = document.getElementById('login-senha').value;
-  const senhaEsperada = localStorage.getItem('mapasala_senha_custom') || atob('QXJlbmExMjM=');
-  if (senha === senhaEsperada) {
-    sessionStorage.setItem('mapasala_auth', 'ok');
-    const tela = document.getElementById('tela-login');
-    tela.style.opacity = '0';
-    tela.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => tela.style.display = 'none', 300);
-  } else {
-    const card = document.getElementById('login-card');
-    const erro = document.getElementById('login-erro');
-    erro.style.display = 'block';
-    card.style.animation = 'none';
-    void card.offsetWidth;
-    card.style.animation = 'shake 0.4s ease';
-    document.getElementById('login-senha').value = '';
-    document.getElementById('login-senha').focus();
-  }
-}
+// (fazerLogin já declarado acima — usa senha custom via getSenhaAtual)
 
 // ── Toggle visibilidade senha ──
 function toggleVisPass(inputId, btn) {
@@ -3699,23 +3687,7 @@ function inicializarConfig() {
   renderTipoRadios();
 }
 
-// Hook na showTab para renderizar config ao entrar
-const _showTabOrig = showTab;
-function showTab(name, ev) {
-  _showTabOrig(name, ev);
-  if (name === 'config') {
-    renderConfigTipos();
-    const cfg = getConfigProva();
-    const cfgSalas = document.getElementById('cfg-prova-salas');
-    const cfgCap   = document.getElementById('cfg-prova-cap');
-    const cfgMax   = document.getElementById('cfg-prova-max');
-    if (cfgSalas) cfgSalas.value = cfg.salas;
-    if (cfgCap)   cfgCap.value   = cfg.cap;
-    if (cfgMax)   cfgMax.value   = cfg.max;
-    const tema = localStorage.getItem('mapasala_tema') || 'light';
-    atualizarBotoesTema(tema);
-  }
-}
+// Renderizar config ao entrar na aba — já tratado dentro de showTab()
 
 // Chamar na inicialização
 setTimeout(inicializarConfig, 0);
