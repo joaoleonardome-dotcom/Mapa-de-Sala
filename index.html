@@ -2836,13 +2836,8 @@ function imprimirProva() {
     toast('Gere o mapa de prova primeiro!', 'error'); return;
   }
   const area = document.getElementById('area-impressao');
-  let html = `<div style="font-family:'Nunito',sans-serif;width:100%">
-    <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:1.3rem;font-weight:800;color:#2c3a35">📝 Mapa de Prova — MapaSala</div>
-      <div style="font-size:0.9rem;color:#00a896;font-weight:700;margin-top:4px">${escapeHtml(provaState.anoSelecionado)}</div>
-      <div style="font-size:0.75rem;color:#8fa89e;margin-top:2px">Gerado em ${new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">`;
+  const dataGeracao = new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  let html = `<div style="font-family:'Nunito',sans-serif;width:100%">`;
 
   provaState.salasSelecionadas.forEach(salaId => {
     const t = state.turmas.find(x => x.id === salaId);
@@ -2859,7 +2854,13 @@ function imprimirProva() {
       </div>`
     ).join('');
 
-    html += `<div style="break-inside:avoid">
+    const isLast = provaState.salasSelecionadas.indexOf(salaId) === provaState.salasSelecionadas.length - 1;
+    html += `<div style="page-break-after:${isLast ? 'avoid' : 'always'};page-break-inside:avoid;padding:24px 0">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:1.2rem;font-weight:800;color:#2c3a35">📝 Mapa de Prova — MapaSala</div>
+        <div style="font-size:0.85rem;color:#00a896;font-weight:700;margin-top:3px">${escapeHtml(provaState.anoSelecionado)}</div>
+        <div style="font-size:0.7rem;color:#8fa89e;margin-top:2px">Gerado em ${dataGeracao}</div>
+      </div>
       <div style="background:linear-gradient(135deg,#007f74,#00c9a7);color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact;print-color-adjust:exact">
         <strong style="font-size:0.9rem">🏫 ${escapeHtml(t.nome)}</strong>
         <span style="font-size:0.75rem;opacity:0.85">${ocupados} aluno(s)</span>
@@ -2870,7 +2871,7 @@ function imprimirProva() {
     </div>`;
   });
 
-  html += '</div></div>';
+  html += '</div>';
   area.innerHTML = html;
   area.style.display = 'flex';
   window.print();
