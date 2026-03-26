@@ -1323,7 +1323,7 @@
     <div>
       <div class="section-title">📝 Mapa de Prova</div>
       <div style="font-size:0.85rem;color:var(--text2);margin-top:4px">
-        Misture alunos de um mesmo ano e distribua nas salas disponíveis
+        Distribua os alunos de um ano/série de forma aleatória e homogênea nas salas de prova
       </div>
     </div>
     <button class="btn btn-secondary" onclick="imprimirProva()">🖨️ Imprimir Mapa</button>
@@ -1332,18 +1332,41 @@
   <!-- Controles -->
   <div class="prova-controles">
     <div class="prova-controles-row">
+
+      <!-- Seleção de Ano/Série -->
       <div class="form-group" style="max-width:240px">
         <label>Ano / Série</label>
         <select id="prova-select-ano" onchange="provaAnoChanged()">
           <option value="">Selecione o ano…</option>
         </select>
       </div>
-      <div style="flex:1">
-        <div class="prova-salas-label">Salas disponíveis</div>
-        <div id="prova-salas-check" class="prova-salas-checks"></div>
-        <div id="prova-info-strip" class="prova-info-strip" style="display:none"></div>
+
+      <!-- Número de salas -->
+      <div class="form-group" style="max-width:160px">
+        <label>Nº de Salas</label>
+        <select id="prova-num-salas" onchange="provaAnoChanged()">
+          <option value="1">1 sala</option>
+          <option value="2">2 salas</option>
+          <option value="3">3 salas</option>
+          <option value="4">4 salas</option>
+          <option value="5">5 salas</option>
+          <option value="6">6 salas</option>
+          <option value="7">7 salas</option>
+          <option value="8" selected>8 salas</option>
+        </select>
       </div>
+
+      <!-- Capacidade por sala -->
+      <div class="form-group" style="max-width:160px">
+        <label>Lugares por Sala</label>
+        <input type="number" id="prova-cap-sala" value="45" min="1" max="200" onchange="provaAnoChanged()">
+      </div>
+
     </div>
+
+    <!-- Info strip -->
+    <div id="prova-info-strip" class="prova-info-strip" style="display:none"></div>
+
     <div class="prova-controles-actions">
       <button class="btn btn-primary" onclick="embaralharProva()" id="btn-embaralhar-prova" disabled>
         🔀 Embaralhar e Distribuir
@@ -1357,14 +1380,14 @@
   <!-- Estado vazio -->
   <div id="prova-empty" class="empty-state">
     <div class="emo">📝</div>
-    <p>Selecione um ano e as salas, depois clique em <strong>Embaralhar e Distribuir</strong>.</p>
+    <p>Selecione um ano/série e clique em <strong>Embaralhar e Distribuir</strong>.</p>
   </div>
 
   <!-- Resultado -->
   <div id="prova-resultado" style="display:none">
     <div id="prova-salas-grid" class="prova-salas-grid"></div>
     <div id="prova-sobra-wrap" class="prova-sobra" style="display:none">
-      <div class="prova-sobra-titulo">⚠️ Alunos sem sala (capacidade excedida)</div>
+      <div class="prova-sobra-titulo">⚠️ Alunos sem sala (capacidade total excedida)</div>
       <div id="prova-sobra-lista" class="prova-sobra-lista"></div>
     </div>
   </div>
@@ -2656,27 +2679,20 @@ function imprimirMapa() {
 // MAPA DE PROVA
 // ═══════════════════════════════════════════
 let provaState = {
-  alocacao: {},   // { turmaId: { seatIdx: { alunoId, turmaOrigem } } }
-  salasSelecionadas: [],
-  anoSelecionado: ''
+  // alocacao: { salaIdx(0-7): [ { id, nome, turmaOrigem } ] }
+  alocacao: [],
+  anoSelecionado: '',
+  numSalas: 8,
+  capSala: 45
 };
-let provaTouchSel = null; // { alunoId, turmaOrigem, fromSala, fromSeat } | { chip: true, alunoId, turmaOrigem }
+let provaTouchSel = null; // { fromSala, fromIdx } | null
 
 function extrairSerie(nomeTurma) {
-  // Extrai o ano/série do nome da turma
-  // Exemplos: "6º Ano A" → "6º Ano", "7° Ano B" → "7° Ano", "9º A" → "9º", "Turma 8B" → "Turma 8"
-  // Estratégia: remove sufixos de letra final (A, B, C...) e retorna o restante como série
   const nome = nomeTurma.trim();
-  // Padrão mais comum: termina em letra ou número de turma (A, B, C, 1, 2...)
-  // Remove o último token se for só uma letra ou "Turma X"
-  const match = nome.match(/^(.+?)\s*[–\-]?\s*[A-Za-z]?\d?$/);
-  // Tenta padrão "Xº Ano A" → "Xº Ano"
   const m1 = nome.match(/^(\d+[°º°]\s*[Aa]no)\s+\S+$/i);
   if (m1) return m1[1].trim();
-  // Padrão "6º A", "7° B" → "6º", "7°"
   const m2 = nome.match(/^(\d+[°º°])\s+\S+$/i);
   if (m2) return m2[1].trim();
-  // Padrão "Turma 6A" → "Turma 6"
   const m3 = nome.match(/^(.*?\d+)[A-Za-z]?$/i);
   if (m3) return m3[1].trim();
   return nome;
@@ -2685,7 +2701,6 @@ function extrairSerie(nomeTurma) {
 function renderProvaAnosSelect() {
   const sel = document.getElementById('prova-select-ano');
   if (!sel) return;
-  // Agrupa turmas por série extraída do nome
   const series = [...new Set(state.turmas.map(t => extrairSerie(t.nome)))].sort();
   sel.innerHTML = '<option value="">Selecione o ano/série…</option>' +
     series.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
@@ -2693,72 +2708,50 @@ function renderProvaAnosSelect() {
 
 function provaAnoChanged() {
   const serie = document.getElementById('prova-select-ano').value;
-  provaState.anoSelecionado = serie;
-  provaState.salasSelecionadas = [];
+  const numSalas = parseInt(document.getElementById('prova-num-salas').value) || 8;
+  const capSala  = parseInt(document.getElementById('prova-cap-sala').value) || 45;
 
-  const wrap = document.getElementById('prova-salas-check');
+  provaState.anoSelecionado = serie;
+  provaState.numSalas = numSalas;
+  provaState.capSala  = capSala;
+
   const infoStrip = document.getElementById('prova-info-strip');
+  const btnEmb    = document.getElementById('btn-embaralhar-prova');
 
   if (!serie) {
-    wrap.innerHTML = '';
     infoStrip.style.display = 'none';
-    document.getElementById('btn-embaralhar-prova').disabled = true;
+    btnEmb.disabled = true;
     return;
   }
 
-  // Alunos que serão misturados (apenas da série selecionada)
   const turmasDaSerie = state.turmas.filter(t => extrairSerie(t.nome) === serie);
-  if (!turmasDaSerie.length) {
-    wrap.innerHTML = '<span style="font-size:0.82rem;color:var(--text3)">Nenhuma turma encontrada para esta série.</span>';
-    document.getElementById('btn-embaralhar-prova').disabled = true;
-    return;
-  }
-  const totalAlunos = state.alunos.filter(a => turmasDaSerie.some(t => t.id === a.turmaId)).length;
-
-  // Salas disponíveis = TODAS as turmas cadastradas (para não misturar origem e destino)
-  const todasTurmas = state.turmas;
-  if (!todasTurmas.length) {
-    wrap.innerHTML = '<span style="font-size:0.82rem;color:var(--text3)">Nenhuma sala cadastrada.</span>';
-    document.getElementById('btn-embaralhar-prova').disabled = true;
-    return;
-  }
-
-  wrap.innerHTML = todasTurmas.map(t => {
-    const cap = t.cols * t.rows;
-    const isDaSerie = turmasDaSerie.some(x => x.id === t.id);
-    return `
-    <label class="prova-sala-chk${isDaSerie ? ' prova-sala-origem' : ''}" id="label-sala-${t.id}" onclick="provaSalaToggle(this, '${t.id}')">
-      <input type="checkbox" value="${t.id}">
-      <span class="prova-sala-chk-icon">✓</span>
-      ${escapeHtml(t.nome)} <span style="font-weight:400;color:var(--text3);margin-left:3px">(${cap} lug.)</span>
-    </label>`;
-  }).join('');
+  const totalAlunos   = state.alunos.filter(a => turmasDaSerie.some(t => t.id === a.turmaId)).length;
+  const capTotal      = numSalas * capSala;
 
   infoStrip.style.display = 'flex';
-  infoStrip.innerHTML = `👥 <strong>${totalAlunos}</strong> aluno(s) do <strong>${escapeHtml(serie)}</strong> serão distribuídos nas salas marcadas`;
+  infoStrip.innerHTML =
+    `👥 <strong>${totalAlunos}</strong> aluno(s) de <strong>${escapeHtml(serie)}</strong> &nbsp;→&nbsp; ` +
+    `<strong>${numSalas}</strong> sala(s) × <strong>${capSala}</strong> lug. = capacidade total <strong>${capTotal}</strong>` +
+    (totalAlunos > capTotal
+      ? `&nbsp;<span style="color:var(--accent2)">⚠️ ${totalAlunos - capTotal} aluno(s) excedentes</span>`
+      : `&nbsp;<span style="color:#007a6e">✅ OK</span>`);
 
-  document.getElementById('btn-embaralhar-prova').disabled = true;
-}
-
-function provaSalaToggle(label, id) {
-  const checkbox = label.querySelector('input[type=checkbox]');
-  checkbox.checked = !checkbox.checked;
-  if (checkbox.checked) {
-    provaState.salasSelecionadas.push(id);
-    label.classList.add('checked');
-  } else {
-    provaState.salasSelecionadas = provaState.salasSelecionadas.filter(x => x !== id);
-    label.classList.remove('checked');
-  }
-  document.getElementById('btn-embaralhar-prova').disabled = provaState.salasSelecionadas.length === 0;
+  btnEmb.disabled = (totalAlunos === 0);
 }
 
 function embaralharProva() {
-  const salaIds = provaState.salasSelecionadas;
-  if (!provaState.anoSelecionado || !salaIds.length) return;
+  const serie    = provaState.anoSelecionado;
+  const numSalas = provaState.numSalas;
+  const capSala  = provaState.capSala;
 
-  // Todos os alunos da série
-  const turmasDaSerie = state.turmas.filter(t => extrairSerie(t.nome) === provaState.anoSelecionado);
+  if (!serie) return;
+
+  // 1. Coletar todos os alunos das turmas deste ano/série
+  const turmasDaSerie = state.turmas.filter(t => extrairSerie(t.nome) === serie);
+  if (!turmasDaSerie.length) {
+    toast('Nenhuma turma encontrada para esta série.', 'error'); return;
+  }
+
   let todosAlunos = [];
   turmasDaSerie.forEach(t => {
     state.alunos
@@ -2766,67 +2759,35 @@ function embaralharProva() {
       .forEach(a => todosAlunos.push({ ...a, turmaOrigem: t.nome }));
   });
 
-  // Embaralhar: vision na frente, depois outros, fixos por último
-  const vision = shuffleArr(todosAlunos.filter(a => a.tipo === 'vision'));
-  const outros = shuffleArr(todosAlunos.filter(a => a.tipo !== 'vision' && a.tipo !== 'fixed'));
-  const fixos  = todosAlunos.filter(a => a.tipo === 'fixed');
-  const ordenados = [...vision, ...outros, ...fixos];
-
-  // Capacidade real de cada sala
-  const capacidades = {};
-  salaIds.forEach(id => {
-    const t = state.turmas.find(x => x.id === id);
-    capacidades[id] = t ? t.cols * t.rows : 0;
-  });
-  const capacidadeTotal = salaIds.reduce((s, id) => s + capacidades[id], 0);
-
-  const totalAlunos = ordenados.length;
-  const sobras = [];
-
-  // Distribuição proporcional à capacidade de cada sala
-  // Ex: sala A=36, sala B=42 → sala A recebe 36/78 do total, sala B recebe 42/78
-  const novaAlocacao = {};
-  salaIds.forEach(id => { novaAlocacao[id] = {}; });
-
-  // Calcular quantos alunos cada sala recebe respeitando sua capacidade
-  const qtdPorSala = {};
-  let totalDistribuido = 0;
-
-  if (capacidadeTotal === 0) {
-    toast('As salas selecionadas não têm capacidade definida.', 'error'); return;
+  if (!todosAlunos.length) {
+    toast('Nenhum aluno cadastrado nesta série.', 'error'); return;
   }
 
-  // Primeira passagem: distribuição proporcional arredondada para baixo
-  salaIds.forEach(id => {
-    const proporcional = Math.floor((capacidades[id] / capacidadeTotal) * Math.min(totalAlunos, capacidadeTotal));
-    qtdPorSala[id] = proporcional;
-    totalDistribuido += proporcional;
-  });
+  // 2. Embaralhar completamente (mistura todas as turmas)
+  shuffleArr(todosAlunos);
 
-  // Segunda passagem: distribuir o resto aos que têm mais capacidade disponível
-  let restante = Math.min(totalAlunos, capacidadeTotal) - totalDistribuido;
-  // Ordenar por maior capacidade disponível para distribuir o resto
-  const salasPorCapacidade = [...salaIds].sort((a, b) => capacidades[b] - capacidades[a]);
-  for (const id of salasPorCapacidade) {
-    if (restante <= 0) break;
-    if (qtdPorSala[id] < capacidades[id]) {
-      qtdPorSala[id]++;
-      restante--;
-    }
+  // 3. Distribuição homogênea: dividir o total pelo número de salas
+  //    Cada sala recebe Math.floor(N/S) ou Math.ceil(N/S) alunos
+  //    de forma que a diferença entre salas seja no máximo 1
+  const total    = todosAlunos.length;
+  const capTotal = numSalas * capSala;
+  const aAlocar  = Math.min(total, capTotal);
+  const sobras   = total > capTotal ? todosAlunos.slice(capTotal) : [];
+
+  // Quantidade base por sala e quantas salas ganham +1
+  const base  = Math.floor(aAlocar / numSalas);
+  const extra = aAlocar % numSalas; // primeiras `extra` salas recebem base+1
+
+  const novaAlocacao = [];
+  let cursor = 0;
+  for (let s = 0; s < numSalas; s++) {
+    const qtd = base + (s < extra ? 1 : 0);
+    novaAlocacao.push(todosAlunos.slice(cursor, cursor + qtd));
+    cursor += qtd;
   }
 
-  // Alocar alunos nas salas
-  let alunoIdx = 0;
-  for (const salaId of salaIds) {
-    const qtd = qtdPorSala[salaId];
-    for (let seat = 0; seat < qtd; seat++) {
-      if (alunoIdx >= ordenados.length) break;
-      novaAlocacao[salaId][seat] = ordenados[alunoIdx++];
-    }
-  }
-
-  // Alunos que sobraram (capacidade total excedida)
-  while (alunoIdx < ordenados.length) sobras.push(ordenados[alunoIdx++]);
+  // Ordenar cada sala alfabeticamente para facilitar leitura
+  novaAlocacao.forEach(sala => sala.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
 
   provaState.alocacao = novaAlocacao;
   provaTouchSel = null;
@@ -2836,7 +2797,6 @@ function embaralharProva() {
   document.getElementById('prova-resultado').style.display = 'block';
   document.getElementById('btn-limpar-prova').style.display = 'inline-flex';
 
-  // Mostrar sobras se houver
   const sobraWrap = document.getElementById('prova-sobra-wrap');
   const sobraLista = document.getElementById('prova-sobra-lista');
   if (sobras.length) {
@@ -2844,10 +2804,10 @@ function embaralharProva() {
       `<span class="prova-chip">${escapeHtml(a.nome)} <span style="opacity:0.6;font-size:0.7rem">(${escapeHtml(a.turmaOrigem)})</span></span>`
     ).join('');
     sobraWrap.style.display = 'block';
-    toast(`⚠️ ${sobras.length} aluno(s) sem sala — capacidade excedida.`, 'error');
+    toast(`⚠️ ${sobras.length} aluno(s) sem sala — capacidade total excedida.`, 'error');
   } else {
     sobraWrap.style.display = 'none';
-    toast(`✅ ${totalAlunos} alunos distribuídos em ${numSalas} sala(s)`);
+    toast(`✅ ${total} alunos distribuídos em ${numSalas} sala(s) de forma homogênea!`);
   }
 }
 
@@ -2855,48 +2815,47 @@ function renderProvaResultado() {
   const grid = document.getElementById('prova-salas-grid');
   grid.innerHTML = '';
 
-  const numSalas = provaState.salasSelecionadas.length;
-  grid.style.gridTemplateColumns = numSalas >= 2 ? 'repeat(2, 1fr)' : '1fr';
+  const numSalas = provaState.alocacao.length;
+  // Layout responsivo: até 2 colunas para melhor leitura
+  grid.style.gridTemplateColumns = numSalas >= 2 ? 'repeat(auto-fill, minmax(340px, 1fr))' : '1fr';
 
-  provaState.salasSelecionadas.forEach(salaId => {
-    const t = state.turmas.find(x => x.id === salaId);
-    if (!t) return;
-    const alocacao = provaState.alocacao[salaId] || {};
-    const alunos = Object.entries(alocacao).sort((a,b) => parseInt(a[0])-parseInt(b[0]));
+  provaState.alocacao.forEach((alunos, salaIdx) => {
+    const numSala  = salaIdx + 1;
+    const capSala  = provaState.capSala;
     const ocupados = alunos.length;
-    // Total de linhas = alunos + espaços vazios (mostra só até capacidade da sala)
-    const capSala = t.cols * t.rows;
-    const totalLinhas = Math.max(ocupados, Math.min(capSala, ocupados + 3)); // até 3 vazios visíveis
 
     let linhasHtml = '';
-    for (let i = 0; i < totalLinhas; i++) {
-      const entry = alunos[i];
-      if (entry) {
-        const [seatIdx, aluno] = entry;
-        linhasHtml += `
-          <div class="prova-linha occupied" data-sala="${salaId}" data-seat="${seatIdx}"
-            onclick="provaClicarLinha('${salaId}', ${seatIdx})">
-            <span class="prova-linha-num">${parseInt(seatIdx)+1}</span>
-            <span class="prova-linha-nome">${escapeHtml(aluno.nome)}</span>
-            <span class="prova-linha-turma">${escapeHtml(aluno.turmaOrigem)}</span>
-          </div>`;
-      } else {
-        linhasHtml += `
-          <div class="prova-linha empty${provaTouchSel ? ' drop-target' : ''}"
-            data-sala="${salaId}" data-seat="${i}"
-            onclick="provaClicarLinha('${salaId}', ${i})">
-            <span class="prova-linha-num">${i+1}</span>
-            <span class="prova-linha-nome" style="color:var(--text3);font-weight:400">— vazio —</span>
-          </div>`;
-      }
+    // Linhas com alunos
+    alunos.forEach((aluno, i) => {
+      const sel = provaTouchSel && provaTouchSel.fromSala === salaIdx && provaTouchSel.fromIdx === i;
+      linhasHtml += `
+        <div class="prova-linha occupied${sel ? ' prova-selecionada' : ''}"
+          data-sala="${salaIdx}" data-seat="${i}"
+          onclick="provaClicarLinha(${salaIdx}, ${i})">
+          <span class="prova-linha-num">${i + 1}</span>
+          <span class="prova-linha-nome">${escapeHtml(aluno.nome)}</span>
+          <span class="prova-linha-turma">${escapeHtml(aluno.turmaOrigem)}</span>
+        </div>`;
+    });
+    // Linhas vazias (até completar capacidade, máximo 3 vazios visíveis)
+    const vaziosVisiveis = Math.min(capSala - ocupados, 3);
+    for (let v = 0; v < vaziosVisiveis; v++) {
+      const seatVazio = ocupados + v;
+      linhasHtml += `
+        <div class="prova-linha empty${provaTouchSel ? ' drop-target' : ''}"
+          data-sala="${salaIdx}" data-seat="${seatVazio}"
+          onclick="provaClicarLinha(${salaIdx}, ${seatVazio})">
+          <span class="prova-linha-num">${seatVazio + 1}</span>
+          <span class="prova-linha-nome" style="color:var(--text3);font-weight:400">— vazio —</span>
+        </div>`;
     }
 
     const card = document.createElement('div');
     card.className = 'prova-sala-card';
     card.innerHTML = `
       <div class="prova-sala-header">
-        <div class="prova-sala-titulo">🏫 ${escapeHtml(t.nome)}</div>
-        <div class="prova-sala-meta">${ocupados} aluno(s)</div>
+        <div class="prova-sala-titulo">🏫 Sala ${numSala}</div>
+        <div class="prova-sala-meta">${ocupados} / ${capSala} aluno(s)</div>
       </div>
       <div class="prova-sala-body">
         <div class="prova-lousa">⬛ LOUSA / QUADRO ⬛</div>
@@ -2906,70 +2865,65 @@ function renderProvaResultado() {
   });
 }
 
-function provaClicarLinha(salaId, seatIdx) {
-  const alocacao = provaState.alocacao[salaId] || {};
-  const aluno = alocacao[seatIdx] || null;
+function provaClicarLinha(salaIdx, posIdx) {
+  const alunos = provaState.alocacao[salaIdx] || [];
+  const aluno  = alunos[posIdx] || null;
 
   if (!provaTouchSel) {
-    // Primeira seleção — só funciona em linhas com aluno
-    if (!aluno) return;
-    provaTouchSel = { fromSala: salaId, fromSeat: seatIdx };
-    // Destacar linha selecionada e mostrar vazios como drop-target
-    document.querySelectorAll('.prova-linha, .prova-chip').forEach(el => el.classList.remove('prova-selecionada'));
-    const linha = document.querySelector(`.prova-linha[data-sala="${salaId}"][data-seat="${seatIdx}"]`);
-    if (linha) linha.classList.add('prova-selecionada');
-    // Rerender para mostrar drop-targets nas linhas vazias
+    if (!aluno) return; // não seleciona linha vazia como origem
+    provaTouchSel = { fromSala: salaIdx, fromIdx: posIdx };
     renderProvaResultado();
-    // Restaurar seleção visual após rerender
-    setTimeout(() => {
-      const l = document.querySelector(`.prova-linha[data-sala="${salaId}"][data-seat="${seatIdx}"]`);
-      if (l) l.classList.add('prova-selecionada');
-    }, 0);
-    toast(`👆 Clique no destino para mover ${aluno.nome.split(' ')[0]} — pode ser vazio ou trocar com outro`);
+    toast(`👆 Clique no destino para mover ${aluno.nome.split(' ')[0]}`);
   } else {
-    const { fromSala, fromSeat } = provaTouchSel;
+    const { fromSala, fromIdx } = provaTouchSel;
+    provaTouchSel = null;
 
-    // Mesma linha: cancelar seleção
-    if (fromSala === salaId && fromSeat === seatIdx) {
-      provaTouchSel = null;
+    if (fromSala === salaIdx && fromIdx === posIdx) {
+      // Mesma posição: cancelar
       renderProvaResultado();
       return;
     }
 
-    const alunoMovendo = provaState.alocacao[fromSala][fromSeat];
-    const alunoDestino = provaState.alocacao[salaId]?.[seatIdx] || null;
+    const alunoMovendo = provaState.alocacao[fromSala][fromIdx];
+    const alunoDestino = provaState.alocacao[salaIdx][posIdx] || null;
 
-    if (!alunoDestino) {
-      // Mover para vazio
-      if (!provaState.alocacao[salaId]) provaState.alocacao[salaId] = {};
-      provaState.alocacao[salaId][seatIdx] = alunoMovendo;
-      delete provaState.alocacao[fromSala][fromSeat];
+    if (alunoDestino) {
+      // Troca entre dois alunos (mesma sala ou salas diferentes)
+      provaState.alocacao[salaIdx][posIdx]  = alunoMovendo;
+      provaState.alocacao[fromSala][fromIdx] = alunoDestino;
     } else {
-      // Swap entre dois alunos (inclusive entre salas diferentes)
-      provaState.alocacao[salaId][seatIdx] = alunoMovendo;
-      provaState.alocacao[fromSala][fromSeat] = alunoDestino;
+      // Mover para posição vazia: remove da origem e insere no destino
+      // Se destino é dentro da mesma sala, faz splice; caso contrário muda de sala
+      provaState.alocacao[fromSala].splice(fromIdx, 1);
+      // Garante que não ultrapasse a capacidade
+      if (provaState.alocacao[salaIdx].length < provaState.capSala) {
+        // Insere na posição correta (no final da lista daquela sala)
+        provaState.alocacao[salaIdx].push(alunoMovendo);
+        // Reordenar alfabeticamente dentro da sala
+        provaState.alocacao[salaIdx].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      } else {
+        // Sala destino cheia: desfaz
+        provaState.alocacao[fromSala].splice(fromIdx, 0, alunoMovendo);
+        toast('Sala destino já está na capacidade máxima!', 'error');
+        renderProvaResultado();
+        return;
+      }
     }
 
-    provaTouchSel = null;
     renderProvaResultado();
     toast(`✅ ${alunoMovendo.nome.split(' ')[0]} movido!`);
   }
 }
 
 function limparProva() {
-  provaState.alocacao = {};
+  provaState.alocacao = [];
   provaTouchSel = null;
   document.getElementById('prova-resultado').style.display = 'none';
   document.getElementById('prova-empty').style.display = 'block';
   document.getElementById('btn-limpar-prova').style.display = 'none';
-  // Desmarcar checkboxes
-  document.querySelectorAll('#prova-salas-check input[type=checkbox]').forEach(c => {
-    c.checked = false;
-    const label = c.closest('.prova-sala-chk');
-    if (label) label.classList.remove('checked');
-  });
-  provaState.salasSelecionadas = [];
-  document.getElementById('btn-embaralhar-prova').disabled = true;
+  document.getElementById('btn-embaralhar-prova').disabled = false;
+  // Atualizar info strip sem resetar os controles
+  provaAnoChanged();
 }
 
 function imprimirProva() {
@@ -2980,22 +2934,19 @@ function imprimirProva() {
   const dataGeracao = new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   let html = `<div style="font-family:'Nunito',sans-serif;width:100%">`;
 
-  provaState.salasSelecionadas.forEach(salaId => {
-    const t = state.turmas.find(x => x.id === salaId);
-    if (!t) return;
-    const alocacao = provaState.alocacao[salaId] || {};
-    const alunos = Object.entries(alocacao).sort((a,b) => parseInt(a[0])-parseInt(b[0]));
+  provaState.alocacao.forEach((alunos, salaIdx) => {
+    const numSala  = salaIdx + 1;
     const ocupados = alunos.length;
+    const isLast   = salaIdx === provaState.alocacao.length - 1;
 
-    const linhasHtml = alunos.map(([seatIdx, aluno], i) =>
+    const linhasHtml = alunos.map((aluno, i) =>
       `<div style="display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:5px;background:${i%2===0?'#f5f0e8':'#fdf8f0'};border:1px solid #e4dcc8;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-        <span style="font-size:0.6rem;color:#8fa89e;font-weight:700;min-width:18px;text-align:right">${parseInt(seatIdx)+1}</span>
+        <span style="font-size:0.6rem;color:#8fa89e;font-weight:700;min-width:20px;text-align:right">${i+1}</span>
         <span style="flex:1;font-size:0.72rem;font-weight:700;color:#2c3a35">${escapeHtml(aluno.nome)}</span>
         <span style="font-size:0.6rem;font-weight:800;background:rgba(0,168,150,0.12);color:#007a6e;border-radius:20px;padding:1px 6px;white-space:nowrap">${escapeHtml(aluno.turmaOrigem)}</span>
       </div>`
     ).join('');
 
-    const isLast = provaState.salasSelecionadas.indexOf(salaId) === provaState.salasSelecionadas.length - 1;
     html += `<div style="page-break-after:${isLast ? 'avoid' : 'always'};page-break-inside:avoid;padding:12px 0">
       <div style="text-align:center;margin-bottom:10px">
         <div style="font-size:1rem;font-weight:800;color:#2c3a35">📝 Mapa de Prova — MapaSala</div>
@@ -3003,7 +2954,7 @@ function imprimirProva() {
         <div style="font-size:0.65rem;color:#8fa89e;margin-top:1px">Gerado em ${dataGeracao}</div>
       </div>
       <div style="background:linear-gradient(135deg,#007f74,#00c9a7);color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-        <strong style="font-size:0.82rem">🏫 ${escapeHtml(t.nome)}</strong>
+        <strong style="font-size:0.82rem">🏫 Sala ${numSala}</strong>
         <span style="font-size:0.7rem;opacity:0.85">${ocupados} aluno(s)</span>
       </div>
       <div style="border:1.5px solid #c9bfa8;border-top:none;border-radius:0 0 8px 8px;padding:6px;display:flex;flex-direction:column;gap:2px">
