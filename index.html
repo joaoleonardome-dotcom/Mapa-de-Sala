@@ -629,7 +629,7 @@
   }
   .prova-salas-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 20px;
     margin-top: 8px;
   }
@@ -2808,6 +2808,9 @@ function embaralharProva() {
 function renderProvaResultado() {
   const grid = document.getElementById('prova-salas-grid');
   grid.innerHTML = '';
+
+  const numSalas = provaState.salasSelecionadas.length;
+  grid.style.gridTemplateColumns = numSalas >= 2 ? 'repeat(2, 1fr)' : '1fr';
 
   provaState.salasSelecionadas.forEach(salaId => {
     const t = state.turmas.find(x => x.id === salaId);
