@@ -2761,25 +2761,49 @@ function embaralharProva() {
   const totalAlunos = ordenados.length;
   const sobras = [];
 
-  // Distribuição proporcional respeitando a capacidade de cada sala
-  const numSalas = salaIds.length;
-  const porSala = Math.floor(totalAlunos / numSalas);
-  let resto = totalAlunos % numSalas;
-
+  // Distribuição proporcional à capacidade de cada sala
+  // Ex: sala A=36, sala B=42 → sala A recebe 36/78 do total, sala B recebe 42/78
   const novaAlocacao = {};
   salaIds.forEach(id => { novaAlocacao[id] = {}; });
 
+  // Calcular quantos alunos cada sala recebe respeitando sua capacidade
+  const qtdPorSala = {};
+  let totalDistribuido = 0;
+
+  if (capacidadeTotal === 0) {
+    toast('As salas selecionadas não têm capacidade definida.', 'error'); return;
+  }
+
+  // Primeira passagem: distribuição proporcional arredondada para baixo
+  salaIds.forEach(id => {
+    const proporcional = Math.floor((capacidades[id] / capacidadeTotal) * Math.min(totalAlunos, capacidadeTotal));
+    qtdPorSala[id] = proporcional;
+    totalDistribuido += proporcional;
+  });
+
+  // Segunda passagem: distribuir o resto aos que têm mais capacidade disponível
+  let restante = Math.min(totalAlunos, capacidadeTotal) - totalDistribuido;
+  // Ordenar por maior capacidade disponível para distribuir o resto
+  const salasPorCapacidade = [...salaIds].sort((a, b) => capacidades[b] - capacidades[a]);
+  for (const id of salasPorCapacidade) {
+    if (restante <= 0) break;
+    if (qtdPorSala[id] < capacidades[id]) {
+      qtdPorSala[id]++;
+      restante--;
+    }
+  }
+
+  // Alocar alunos nas salas
   let alunoIdx = 0;
   for (const salaId of salaIds) {
-    const qtdIdeal = porSala + (resto-- > 0 ? 1 : 0);
-    const qtd = Math.min(qtdIdeal, capacidades[salaId]);
+    const qtd = qtdPorSala[salaId];
     for (let seat = 0; seat < qtd; seat++) {
       if (alunoIdx >= ordenados.length) break;
       novaAlocacao[salaId][seat] = ordenados[alunoIdx++];
     }
   }
 
-  // Alunos que sobraram (capacidade excedida)
+  // Alunos que sobraram (capacidade total excedida)
   while (alunoIdx < ordenados.length) sobras.push(ordenados[alunoIdx++]);
 
   provaState.alocacao = novaAlocacao;
