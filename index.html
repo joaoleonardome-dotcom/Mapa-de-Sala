@@ -582,9 +582,50 @@
 
   /* ─── MAPA DE PROVA ─── */
   .prova-controles {
-    display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .prova-controles-row {
+    display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;
+  }
+  .prova-salas-label {
+    font-size: 0.8rem; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .prova-salas-checks {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .prova-sala-chk {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 5px 10px;
+    font-size: 0.82rem; font-weight: 600; color: var(--text2);
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .prova-sala-chk:hover { border-color: var(--accent); color: var(--text); }
+  .prova-sala-chk.checked {
+    border-color: var(--accent); background: rgba(0,168,150,0.10); color: #007a6e;
+  }
+  .prova-sala-chk input[type=checkbox] { display: none; }
+  .prova-sala-chk-icon {
+    width: 14px; height: 14px; border-radius: 3px;
+    border: 1.5px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; color: transparent; flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .prova-sala-chk.checked .prova-sala-chk-icon {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .prova-info-strip {
+    font-size: 0.78rem; color: var(--text2); margin-top: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .prova-controles-actions {
+    display: flex; gap: 10px; align-items: center; padding-top: 4px;
+    border-top: 1px solid var(--border);
   }
   .prova-salas-grid {
     display: grid;
@@ -1282,22 +1323,27 @@
 
   <!-- Controles -->
   <div class="prova-controles">
-    <div class="form-group" style="min-width:200px;flex:1">
-      <label>Ano / Série</label>
-      <select id="prova-select-ano" onchange="provaAnoChanged()">
-        <option value="">Selecione o ano…</option>
-      </select>
+    <div class="prova-controles-row">
+      <div class="form-group" style="max-width:240px">
+        <label>Ano / Série</label>
+        <select id="prova-select-ano" onchange="provaAnoChanged()">
+          <option value="">Selecione o ano…</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <div class="prova-salas-label">Salas disponíveis</div>
+        <div id="prova-salas-check" class="prova-salas-checks"></div>
+        <div id="prova-info-strip" class="prova-info-strip" style="display:none"></div>
+      </div>
     </div>
-    <div class="form-group" style="min-width:160px;flex:1">
-      <label>Salas disponíveis</label>
-      <div id="prova-salas-check" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px"></div>
+    <div class="prova-controles-actions">
+      <button class="btn btn-primary" onclick="embaralharProva()" id="btn-embaralhar-prova" disabled>
+        🔀 Embaralhar e Distribuir
+      </button>
+      <button class="btn btn-secondary" onclick="limparProva()" id="btn-limpar-prova" style="display:none">
+        🗑️ Limpar
+      </button>
     </div>
-    <button class="btn btn-primary" onclick="embaralharProva()" id="btn-embaralhar-prova" disabled>
-      🔀 Embaralhar e Distribuir
-    </button>
-    <button class="btn btn-secondary" onclick="limparProva()" id="btn-limpar-prova" style="display:none">
-      🗑️ Limpar
-    </button>
   </div>
 
   <!-- Estado vazio -->
@@ -2622,32 +2668,29 @@ function provaAnoChanged() {
   wrap.innerHTML = turmasDaSerie.map(t => {
     const cap = t.cols * t.rows;
     return `
-    <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;
-      background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;
-      padding:6px 12px;font-size:0.82rem;font-weight:700;transition:all 0.15s"
-      id="label-sala-${t.id}">
-      <input type="checkbox" value="${t.id}" onchange="provaSalaToggle(this)"
-        style="accent-color:var(--accent)">
-      ${escapeHtml(t.nome)} <span style="font-weight:400;color:var(--text3)">(${cap} lugares)</span>
+    <label class="prova-sala-chk" id="label-sala-${t.id}" onclick="provaSalaToggle(this, '${t.id}')">
+      <input type="checkbox" value="${t.id}">
+      <span class="prova-sala-chk-icon">✓</span>
+      ${escapeHtml(t.nome)} <span style="font-weight:400;color:var(--text3);margin-left:3px">(${cap})</span>
     </label>`;
   }).join('');
 
-  wrap.innerHTML += `<div style="width:100%;font-size:0.78rem;color:var(--text2);margin-top:6px">
-    👥 <strong>${totalAlunos}</strong> aluno(s) de ${turmasDaSerie.length} turma(s) serão misturados
-  </div>`;
+  const infoStrip = document.getElementById('prova-info-strip');
+  infoStrip.style.display = 'flex';
+  infoStrip.innerHTML = `👥 <strong>${totalAlunos}</strong> aluno(s) de ${turmasDaSerie.length} turma(s) serão misturados`;
 
   document.getElementById('btn-embaralhar-prova').disabled = true;
 }
 
-function provaSalaToggle(checkbox) {
-  const id = checkbox.value;
-  const label = document.getElementById('label-sala-' + id);
+function provaSalaToggle(label, id) {
+  const checkbox = label.querySelector('input[type=checkbox]');
+  checkbox.checked = !checkbox.checked;
   if (checkbox.checked) {
     provaState.salasSelecionadas.push(id);
-    if (label) { label.style.borderColor = 'var(--accent)'; label.style.background = 'rgba(0,168,150,0.08)'; }
+    label.classList.add('checked');
   } else {
     provaState.salasSelecionadas = provaState.salasSelecionadas.filter(x => x !== id);
-    if (label) { label.style.borderColor = 'var(--border)'; label.style.background = 'var(--surface2)'; }
+    label.classList.remove('checked');
   }
   document.getElementById('btn-embaralhar-prova').disabled = provaState.salasSelecionadas.length === 0;
 }
@@ -2822,8 +2865,8 @@ function limparProva() {
   // Desmarcar checkboxes
   document.querySelectorAll('#prova-salas-check input[type=checkbox]').forEach(c => {
     c.checked = false;
-    const label = document.getElementById('label-sala-' + c.value);
-    if (label) { label.style.borderColor = 'var(--border)'; label.style.background = 'var(--surface2)'; }
+    const label = c.closest('.prova-sala-chk');
+    if (label) label.classList.remove('checked');
   });
   provaState.salasSelecionadas = [];
   document.getElementById('btn-embaralhar-prova').disabled = true;
