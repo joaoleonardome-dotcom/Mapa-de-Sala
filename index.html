@@ -746,7 +746,81 @@
     background: var(--accent); color: #fff; border-color: var(--accent);
   }
 
-  /* ─── TEMA ESCURO ─── */
+  /* ─── SEGMENTO FUND I / FUND II ─── */
+  .segmento-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .segmento-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px;
+    padding: 28px 20px;
+    border-radius: var(--radius);
+    border: 2.5px solid transparent;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-size: 1.1rem; font-weight: 800;
+    transition: all 0.22s;
+    position: relative; overflow: hidden;
+  }
+  .segmento-btn .seg-emoji { font-size: 2.4rem; line-height: 1; }
+  .segmento-btn .seg-sub   { font-size: 0.78rem; font-weight: 600; opacity: 0.75; margin-top: 2px; }
+  .segmento-btn-fi {
+    background: linear-gradient(135deg, #e8f8f5, #c8ede8);
+    color: #006a60; border-color: rgba(0,168,150,0.35);
+  }
+  .segmento-btn-fi:hover, .segmento-btn-fi.ativo {
+    background: linear-gradient(135deg, #c8ede8, #a8ddd6);
+    border-color: var(--accent);
+    box-shadow: 0 8px 28px rgba(0,168,150,0.25);
+    transform: translateY(-3px);
+  }
+  .segmento-btn-fii {
+    background: linear-gradient(135deg, #eef0ff, #dde0ff);
+    color: #3a36aa; border-color: rgba(108,99,255,0.35);
+  }
+  .segmento-btn-fii:hover, .segmento-btn-fii.ativo {
+    background: linear-gradient(135deg, #dde0ff, #c8ccff);
+    border-color: #6c63ff;
+    box-shadow: 0 8px 28px rgba(108,99,255,0.25);
+    transform: translateY(-3px);
+  }
+  .segmento-badge {
+    position: absolute; top: 10px; right: 12px;
+    background: rgba(0,0,0,0.08); border-radius: 20px;
+    padding: 3px 10px; font-size: 0.72rem; font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+  }
+  /* Filtro de segmento na aba Turmas */
+  .turmas-segmento-filtro {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
+  }
+  .seg-filtro-btn {
+    padding: 8px 20px; border-radius: 30px;
+    border: 2px solid var(--border);
+    background: var(--surface); cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-size: 0.88rem; font-weight: 700;
+    color: var(--text2); transition: all 0.18s;
+  }
+  .seg-filtro-btn:hover { border-color: var(--accent); color: var(--text); }
+  .seg-filtro-btn.ativo-fi  { background: linear-gradient(135deg,#c8ede8,#a8ddd6); border-color: var(--accent); color: #006a60; }
+  .seg-filtro-btn.ativo-fii { background: linear-gradient(135deg,#dde0ff,#c8ccff); border-color: #6c63ff; color: #3a36aa; }
+  .seg-filtro-btn.ativo-all { background: var(--surface2); border-color: var(--border); color: var(--text); }
+  /* Cor do avatar da turma por segmento */
+  .turma-card[data-seg="FI"]  .turma-avatar { background: linear-gradient(135deg,#00a896dd,#00b88a99) !important; }
+  .turma-card[data-seg="FII"] .turma-avatar { background: linear-gradient(135deg,#6c63ffdd,#9c95ff99) !important; }
+  .turma-card[data-seg="FI"]  { border-left: 3px solid var(--accent); }
+  .turma-card[data-seg="FII"] { border-left: 3px solid #6c63ff; }
+
+  /* Responsivo segmento */
+  @media (max-width: 480px) {
+    .segmento-btns { grid-template-columns: 1fr; }
+    .segmento-btn  { padding: 22px 16px; }
+  }
+
+
   body.dark {
     --bg: #1a1f1e;
     --surface: #222928;
@@ -1235,12 +1309,34 @@
     <button class="atalho-btn" onclick="showTabDireto('mapa')"><span class="ab-icon">🪑</span> Ver Mapa</button>
   </div>
 
-  <!-- Turmas recentes -->
-  <div class="dash-section-title">🏫 Suas Turmas</div>
-  <div class="dash-turmas-recentes" id="dash-turmas-lista"></div>
+  <!-- Turmas filtradas por segmento -->
+  <div id="dash-turmas-secao" style="display:none">
+    <div class="dash-section-title" id="dash-turmas-titulo">🏫 Turmas</div>
+    <div class="dash-turmas-recentes" id="dash-turmas-lista"></div>
+    <div id="dash-empty-seg" class="empty-state" style="display:none">
+      <div class="emo">🏫</div>
+      <p id="dash-empty-seg-txt">Nenhuma turma neste segmento.</p>
+    </div>
+  </div>
   <div id="dash-empty" class="empty-state" style="display:none">
     <div class="emo">🏫</div>
     <p>Nenhuma turma ainda.<br>Clique em <strong>Nova Turma</strong> para começar!</p>
+  </div>
+
+  <!-- Botões grandes Fundamental I / II -->
+  <div class="segmento-btns">
+    <button class="segmento-btn segmento-btn-fi" id="dash-btn-fi" onclick="filtrarDashSegmento('FI')">
+      <span class="seg-emoji">📗</span>
+      <span>Fundamental I</span>
+      <span class="seg-sub">4º e 5º Ano</span>
+      <span class="segmento-badge" id="dash-badge-fi">0 turmas</span>
+    </button>
+    <button class="segmento-btn segmento-btn-fii" id="dash-btn-fii" onclick="filtrarDashSegmento('FII')">
+      <span class="seg-emoji">📘</span>
+      <span>Fundamental II</span>
+      <span class="seg-sub">6º ao 9º Ano</span>
+      <span class="segmento-badge" id="dash-badge-fii">0 turmas</span>
+    </button>
   </div>
 
 </div>
@@ -1252,10 +1348,34 @@
     <button class="btn btn-primary" onclick="abrirModalTurma()">＋ Nova Turma</button>
   </div>
 
+  <!-- Filtro por segmento -->
+  <div class="turmas-segmento-filtro">
+    <button class="seg-filtro-btn ativo-all" id="seg-btn-all" onclick="filtrarSegmento('all')">🏫 Todas</button>
+    <button class="seg-filtro-btn" id="seg-btn-fi"  onclick="filtrarSegmento('FI')">📗 Fundamental I</button>
+    <button class="seg-filtro-btn" id="seg-btn-fii" onclick="filtrarSegmento('FII')">📘 Fundamental II</button>
+    <span id="seg-count" style="font-size:0.8rem;color:var(--text3);margin-left:4px"></span>
+  </div>
+
   <div id="turmas-grid" class="turmas-grid"></div>
   <div id="turmas-empty" class="empty-state" style="display:none">
     <div class="emo">🏫</div>
-    <p>Nenhuma turma cadastrada ainda.<br>Clique em <strong>+ Nova Turma</strong> para começar!</p>
+    <p id="turmas-empty-txt">Nenhuma turma cadastrada ainda.<br>Clique em <strong>+ Nova Turma</strong> para começar!</p>
+  </div>
+
+  <!-- Botões grandes na base -->
+  <div class="segmento-btns" style="margin-top:32px">
+    <button class="segmento-btn segmento-btn-fi" id="turmas-btn-fi" onclick="filtrarSegmento('FI')">
+      <span class="seg-emoji">📗</span>
+      <span>Fundamental I</span>
+      <span class="seg-sub">4º e 5º Ano</span>
+      <span class="segmento-badge" id="turmas-badge-fi">0 turmas</span>
+    </button>
+    <button class="segmento-btn segmento-btn-fii" id="turmas-btn-fii" onclick="filtrarSegmento('FII')">
+      <span class="seg-emoji">📘</span>
+      <span>Fundamental II</span>
+      <span class="seg-sub">6º ao 9º Ano</span>
+      <span class="segmento-badge" id="turmas-badge-fii">0 turmas</span>
+    </button>
   </div>
 </div>
 
@@ -1656,6 +1776,20 @@
         <input type="text" id="t-nome" placeholder="Ex: 9º Ano A" maxlength="50">
       </div>
     </div>
+    <!-- Segmento -->
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Segmento *</label>
+      <div style="display:flex;gap:10px">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;cursor:pointer;transition:all 0.18s;font-weight:700;font-size:0.9rem" id="seg-opt-fi" onclick="selecionarSegmento('FI')">
+          <input type="radio" name="t-segmento" value="FI" style="display:none">
+          <span>📗</span> Fundamental I
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;cursor:pointer;transition:all 0.18s;font-weight:700;font-size:0.9rem" id="seg-opt-fii" onclick="selecionarSegmento('FII')">
+          <input type="radio" name="t-segmento" value="FII" style="display:none">
+          <span>📘</span> Fundamental II
+        </label>
+      </div>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label>Colunas (largura)</label>
@@ -1677,6 +1811,7 @@
       </div>
     </div>
     <input type="hidden" id="t-edit-id">
+    <input type="hidden" id="t-segmento" value="FII">
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="fecharModal('modal-turma')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarTurma()">Salvar Turma</button>
@@ -2030,27 +2165,17 @@ function renderDashboard() {
   document.getElementById('stat-alocados').textContent = totalAlocados;
   document.getElementById('stat-sem-assento').textContent = Math.max(0, totalAlunos - totalAlocados);
 
-  // Lista de turmas
-  const lista = document.getElementById('dash-turmas-lista');
+  // Badges dos botões de segmento
+  const ctFi  = state.turmas.filter(t => (t.segmento || 'FII') === 'FI').length;
+  const ctFii = state.turmas.filter(t => (t.segmento || 'FII') === 'FII').length;
+  const bFi  = document.getElementById('dash-badge-fi');
+  const bFii = document.getElementById('dash-badge-fii');
+  if (bFi)  bFi.textContent  = ctFi  + ' turma' + (ctFi  !== 1 ? 's' : '');
+  if (bFii) bFii.textContent = ctFii + ' turma' + (ctFii !== 1 ? 's' : '');
+
+  // Mostrar estado vazio se não há turmas
   const empty = document.getElementById('dash-empty');
-  if (!state.turmas.length) { lista.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  lista.innerHTML = state.turmas.map(t => {
-    const alunos = state.alunos.filter(a => a.turmaId === t.id).length;
-    const total = t.cols * t.rows;
-    const alocados = Object.values(state.assentos[t.id] || {}).filter(v => v).length;
-    const pct = total > 0 ? Math.round((alocados / total) * 100) : 0;
-    return `<div class="dash-turma-item" onclick="irParaMapa('${t.id}')">
-      <div class="dt-nome">${escapeHtml(t.nome)}</div>
-      <div class="dt-meta">
-        <span>📐 ${t.cols}×${t.rows}</span>
-        <span>👥 ${alunos}</span>
-        <span>🪑 ${alocados}/${total}</span>
-      </div>
-      ${t.disciplina ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:2px">🧑‍🏫 Orientador: ${escapeHtml(t.disciplina)}</div>` : ''}
-      <div class="dash-progress"><div class="dash-progress-bar" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
+  if (empty) empty.style.display = state.turmas.length ? 'none' : 'block';
 }
 
 function irParaMapa(turmaId) {
@@ -2220,27 +2345,120 @@ function handleTouchCadeira(seatIdx) {
   }
 }
 
-// ═══════════════════════════════════════════
-// TURMAS
-// ═══════════════════════════════════════════
+// Filtro ativo na aba Turmas
+let segmentoFiltroAtual = 'all';
+
+function filtrarSegmento(seg) {
+  segmentoFiltroAtual = seg;
+  // Atualizar botões pill
+  ['all','fi','fii'].forEach(s => {
+    const btn = document.getElementById('seg-btn-' + s);
+    if (btn) btn.className = 'seg-filtro-btn' + (s === seg.toLowerCase() || (s==='all' && seg==='all') ? ' ativo-' + (s==='all'?'all':s) : '');
+  });
+  // Destaque nos botões grandes
+  document.getElementById('turmas-btn-fi').classList.toggle('ativo', seg === 'FI');
+  document.getElementById('turmas-btn-fii').classList.toggle('ativo', seg === 'FII');
+  renderTurmas();
+}
+
+function filtrarDashSegmento(seg) {
+  // Alterna: clicar no mesmo botão já ativo fecha a lista
+  const secao = document.getElementById('dash-turmas-secao');
+  const btnFi  = document.getElementById('dash-btn-fi');
+  const btnFii = document.getElementById('dash-btn-fii');
+  const jaAtivo = btnFi.classList.contains('ativo') && seg === 'FI'
+               || btnFii.classList.contains('ativo') && seg === 'FII';
+
+  if (jaAtivo) {
+    secao.style.display = 'none';
+    btnFi.classList.remove('ativo'); btnFii.classList.remove('ativo');
+    return;
+  }
+
+  btnFi.classList.toggle('ativo', seg === 'FI');
+  btnFii.classList.toggle('ativo', seg === 'FII');
+
+  const turmasFiltradas = state.turmas.filter(t => (t.segmento || 'FII') === seg);
+  const titulo = document.getElementById('dash-turmas-titulo');
+  const lista  = document.getElementById('dash-turmas-lista');
+  const emptyS = document.getElementById('dash-empty-seg');
+  const emptyT = document.getElementById('dash-empty-seg-txt');
+
+  titulo.textContent = seg === 'FI' ? '📗 Turmas — Fundamental I' : '📘 Turmas — Fundamental II';
+  secao.style.display = 'block';
+
+  if (!turmasFiltradas.length) {
+    lista.innerHTML = '';
+    emptyT.textContent = `Nenhuma turma no ${seg === 'FI' ? 'Fundamental I' : 'Fundamental II'} ainda.`;
+    emptyS.style.display = 'block';
+    return;
+  }
+  emptyS.style.display = 'none';
+  lista.innerHTML = turmasFiltradas.map(t => {
+    const alunos  = state.alunos.filter(a => a.turmaId === t.id).length;
+    const total   = t.cols * t.rows;
+    const alocados = Object.values(state.assentos[t.id] || {}).filter(v => v).length;
+    const pct = total > 0 ? Math.round((alocados / total) * 100) : 0;
+    const cor = seg === 'FI' ? '#00a896' : '#6c63ff';
+    return `<div class="dash-turma-item" onclick="irParaMapa('${t.id}')" style="border-left:3px solid ${cor}">
+      <div class="dt-nome">${escapeHtml(t.nome)}</div>
+      <div class="dt-meta">
+        <span>📐 ${t.cols}×${t.rows}</span>
+        <span>👥 ${alunos}</span>
+        <span>🪑 ${alocados}/${total}</span>
+      </div>
+      ${t.disciplina ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:2px">🧑‍🏫 ${escapeHtml(t.disciplina)}</div>` : ''}
+      <div class="dash-progress"><div class="dash-progress-bar" style="width:${pct}%;background:${cor}"></div></div>
+    </div>`;
+  }).join('');
+}
+
 function renderTurmas() {
-  const grid = document.getElementById('turmas-grid');
+  const grid  = document.getElementById('turmas-grid');
   const empty = document.getElementById('turmas-empty');
-  if (!state.turmas.length) {
-    grid.innerHTML = ''; empty.style.display = 'block'; return;
+  const emptyTxt = document.getElementById('turmas-empty-txt');
+  const countEl  = document.getElementById('seg-count');
+
+  // Atualizar badges dos botões grandes
+  const ctFi  = state.turmas.filter(t => (t.segmento || 'FII') === 'FI').length;
+  const ctFii = state.turmas.filter(t => (t.segmento || 'FII') === 'FII').length;
+  const bFi  = document.getElementById('turmas-badge-fi');
+  const bFii = document.getElementById('turmas-badge-fii');
+  if (bFi)  bFi.textContent  = ctFi  + ' turma' + (ctFi  !== 1 ? 's' : '');
+  if (bFii) bFii.textContent = ctFii + ' turma' + (ctFii !== 1 ? 's' : '');
+
+  // Filtrar
+  const turmasFiltradas = segmentoFiltroAtual === 'all'
+    ? state.turmas
+    : state.turmas.filter(t => (t.segmento || 'FII') === segmentoFiltroAtual);
+
+  if (countEl) countEl.textContent = turmasFiltradas.length
+    ? turmasFiltradas.length + ' turma(s)'
+    : '';
+
+  if (!turmasFiltradas.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    if (emptyTxt) emptyTxt.innerHTML = segmentoFiltroAtual === 'all'
+      ? 'Nenhuma turma cadastrada ainda.<br>Clique em <strong>+ Nova Turma</strong> para começar!'
+      : `Nenhuma turma no ${segmentoFiltroAtual === 'FI' ? 'Fundamental I' : 'Fundamental II'} ainda.`;
+    return;
   }
   empty.style.display = 'none';
+
   const turmaColors = ['#00a896','#e05c5c','#d4891a','#6c63ff','#e91e8c','#00b88a'];
-  grid.innerHTML = state.turmas.map((t, idx) => {
-    const alunosCt = state.alunos.filter(a => a.turmaId === t.id).length;
+  grid.innerHTML = turmasFiltradas.map((t, idx) => {
+    const alunosCt   = state.alunos.filter(a => a.turmaId === t.id).length;
     const totalSeats = t.cols * t.rows;
-    const ocupados = Object.values(state.assentos[t.id] || {}).filter(v => v !== null).length;
-    const pct = totalSeats > 0 ? Math.round((ocupados / totalSeats) * 100) : 0;
-    const cor = turmaColors[idx % turmaColors.length];
-    const inicial = t.nome.charAt(0).toUpperCase();
-    const incompCt = state.alunos.filter(a => a.turmaId === t.id && a.incomp && a.incomp.length > 0).length;
+    const ocupados   = Object.values(state.assentos[t.id] || {}).filter(v => v !== null).length;
+    const pct        = totalSeats > 0 ? Math.round((ocupados / totalSeats) * 100) : 0;
+    const seg        = t.segmento || 'FII';
+    const cor        = seg === 'FI' ? '#00a896' : '#6c63ff';
+    const incompCt   = state.alunos.filter(a => a.turmaId === t.id && a.incomp && a.incomp.length > 0).length;
+    const inicial    = t.nome.charAt(0).toUpperCase();
+    const segLabel   = seg === 'FI' ? '📗 Fund. I' : '📘 Fund. II';
     return `
-    <div class="turma-card ${turmaSelecionada===t.id?'selected':''}" onclick="selecionarTurma('${t.id}')">
+    <div class="turma-card ${turmaSelecionada===t.id?'selected':''}" data-seg="${seg}" onclick="selecionarTurma('${t.id}')">
       <div class="turma-actions">
         <button class="btn btn-sm btn-secondary btn-icon" onclick="editarTurma('${t.id}',event)" title="Editar">✏️</button>
         <button class="btn btn-sm btn-danger btn-icon" onclick="excluirTurma('${t.id}',event)" title="Excluir">🗑️</button>
@@ -2253,16 +2471,30 @@ function renderTurmas() {
         </div>
       </div>
       <div class="turma-meta">
+        <span class="turma-meta-pill" style="color:${cor};background:${cor}18;border-color:${cor}40">${segLabel}</span>
         <span class="turma-meta-pill">📐 ${t.cols}×${t.rows}</span>
         <span class="turma-meta-pill">👥 ${alunosCt} alunos</span>
         ${incompCt > 0 ? `<span class="turma-meta-pill" style="color:#b83a3a;background:rgba(224,92,92,0.1);border-color:rgba(224,92,92,0.2)">⚠️ ${incompCt} restr.</span>` : ''}
       </div>
       <div class="turma-progress-wrap">
-        <div class="turma-progress"><div class="turma-progress-bar" style="width:${pct}%"></div></div>
+        <div class="turma-progress"><div class="turma-progress-bar" style="width:${pct}%;background:linear-gradient(90deg,${cor},${cor}aa)"></div></div>
         <span class="turma-progress-label">${ocupados}/${totalSeats} cadeiras</span>
       </div>
     </div>`;
   }).join('');
+}
+
+function selecionarSegmento(val) {
+  document.getElementById('t-segmento').value = val;
+  const fi  = document.getElementById('seg-opt-fi');
+  const fii = document.getElementById('seg-opt-fii');
+  if (val === 'FI') {
+    fi.style.borderColor  = 'var(--accent)'; fi.style.background  = 'rgba(0,168,150,0.10)'; fi.style.color  = '#006a60';
+    fii.style.borderColor = 'var(--border)'; fii.style.background = 'var(--surface2)'; fii.style.color = 'var(--text)';
+  } else {
+    fii.style.borderColor = '#6c63ff'; fii.style.background = 'rgba(108,99,255,0.10)'; fii.style.color = '#3a36aa';
+    fi.style.borderColor  = 'var(--border)'; fi.style.background  = 'var(--surface2)'; fi.style.color  = 'var(--text)';
+  }
 }
 
 function abrirModalTurma(editId = null) {
@@ -2272,6 +2504,7 @@ function abrirModalTurma(editId = null) {
   document.getElementById('t-ano').value = '';
   document.getElementById('t-disciplina').value = '';
   document.getElementById('t-edit-id').value = '';
+  selecionarSegmento('FII'); // padrão
   if (editId) {
     const t = state.turmas.find(x => x.id === editId);
     if (!t) return;
@@ -2281,6 +2514,7 @@ function abrirModalTurma(editId = null) {
     document.getElementById('t-ano').value = t.ano || '';
     document.getElementById('t-disciplina').value = t.disciplina || '';
     document.getElementById('t-edit-id').value = editId;
+    selecionarSegmento(t.segmento || 'FII');
     document.getElementById('modal-turma-titulo').textContent = '✏️ Editar Turma';
   } else {
     document.getElementById('modal-turma-titulo').textContent = '🏫 Nova Turma';
@@ -2295,14 +2529,15 @@ function salvarTurma() {
   const rows = parseInt(document.getElementById('t-rows').value) || 5;
   const ano = document.getElementById('t-ano').value.trim();
   const disciplina = document.getElementById('t-disciplina').value.trim();
+  const segmento = document.getElementById('t-segmento').value || 'FII';
   const editId = document.getElementById('t-edit-id').value;
   if (!nome) { toast('Informe o nome da turma!', 'error'); return; }
   if (editId) {
     const t = state.turmas.find(x => x.id === editId);
-    if (t) { t.nome = nome; t.cols = cols; t.rows = rows; t.ano = ano; t.disciplina = disciplina; }
+    if (t) { t.nome = nome; t.cols = cols; t.rows = rows; t.ano = ano; t.disciplina = disciplina; t.segmento = segmento; }
   } else {
     const id = 'T' + Date.now();
-    state.turmas.push({ id, nome, cols, rows, ano, disciplina });
+    state.turmas.push({ id, nome, cols, rows, ano, disciplina, segmento });
     state.assentos[id] = {};
   }
   salvarStorage();
