@@ -1499,6 +1499,24 @@
   </div>
 </div>
 
+<!-- MODAL: ALOCAR ALUNO NA CADEIRA -->
+<div class="overlay" id="modal-alocar">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">
+      <span>🪑 Alocar na Cadeira <span id="alocar-cadeira-num"></span></span>
+      <button class="modal-close" onclick="fecharModal('modal-alocar')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label>Selecione o aluno</label>
+      <select id="alocar-select"></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-alocar')">Cancelar</button>
+      <button class="btn btn-primary" id="alocar-confirmar">✅ Alocar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: CONFIRMAÇÃO CUSTOMIZADA -->
 <div class="overlay" id="modal-confirm">
   <div class="modal" style="max-width:420px">
@@ -1579,7 +1597,12 @@ let _ignorarProximoSync = false;
 
 function salvarStorage() {
   // Sempre salva local como cache
-  localStorage.setItem('mapasala_v2', JSON.stringify(state));
+  try {
+    localStorage.setItem('mapasala_v2', JSON.stringify(state));
+  } catch(e) {
+    console.warn('localStorage cheio ou indisponível:', e);
+    toast('⚠️ Não foi possível salvar localmente. Armazenamento cheio.', 'error');
+  }
   // Salva no Firebase se disponível
   if (window._fbSet) {
     _ignorarProximoSync = true;
@@ -1591,9 +1614,16 @@ function salvarStorage() {
 }
 
 function carregarStorage() {
-  // Carrega do cache local enquanto Firebase não responde
   const raw = localStorage.getItem('mapasala_v2');
-  if (raw) { try { state = JSON.parse(raw); } catch(e){} }
+  if (raw) {
+    try {
+      const d = JSON.parse(raw);
+      if (!d.turmas) d.turmas = [];
+      if (!d.alunos) d.alunos = [];
+      if (!d.assentos) d.assentos = {};
+      state = d;
+    } catch(e) { console.warn('Erro ao carregar storage:', e); }
+  }
 }
 
 function iniciarSyncFirebase() {
@@ -1991,6 +2021,7 @@ function salvarTurma() {
   renderTurmas();
   renderDashboard();
   renderSelectTurmaMapa();
+  if (turmaSelecionada) renderMapa();
   toast('Turma salva! ✅');
 }
 
@@ -2002,7 +2033,7 @@ function excluirTurma(id, ev) {
     state.alunos = state.alunos.filter(a => a.turmaId !== id);
     delete state.assentos[id];
     if (turmaSelecionada === id) { turmaSelecionada = null; atualizarPainelAlunos(); }
-    salvarStorage(); renderTurmas(); renderSelectTurmaMapa();
+    salvarStorage(); renderTurmas(); renderSelectTurmaMapa(); renderDashboard();
     toast('Turma excluída.');
   });
 }
@@ -2240,7 +2271,7 @@ function excluirAluno(id) {
     }
     state.alunos = state.alunos.filter(a => a.id !== id);
     state.alunos.forEach(a => { if (a.incomp) a.incomp = a.incomp.filter(iid => iid !== id); });
-    salvarStorage(); renderAlunos(); renderTurmas();
+    salvarStorage(); renderAlunos(); renderTurmas(); renderDashboard();
     toast('Aluno removido.');
   });
 }
@@ -2373,16 +2404,15 @@ function confirmarImport() {
     state.alunos.push({
       id: 'A' + Date.now() + Math.random().toString(36).slice(2),
       turmaId: turmaSelecionada,
-      nome: a.nome, tipo: a.tipo, obs: a.obs
+      nome: a.nome, tipo: a.tipo, obs: a.obs, incomp: []
     });
     added++;
   });
-  salvarStorage();
-  fecharModal('modal-import');
   // Ordenar alfabeticamente após importar
   state.alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   salvarStorage();
-  renderAlunos(); renderTurmas();
+  fecharModal('modal-import');
+  renderAlunos(); renderTurmas(); renderDashboard();
   toast(`${added} alunos importados! ✅`);
 }
 
@@ -2536,11 +2566,11 @@ function dragDrop(ev, toSeat) {
   }
 
   // troca ou coloca
-  if (dragFromSeat !== null) seats[dragFromSeat] = occupantAtTarget || null;
-  else if (occupantAtTarget) {
-    // se vem do sidebar e tem ocupante, retira ocupante (vai pro sidebar)
-    seats[toSeat] = null;
+  if (dragFromSeat !== null) {
+    // movendo de cadeira para cadeira: troca
+    seats[dragFromSeat] = occupantAtTarget || null;
   }
+  // se vier do sidebar e tiver ocupante, o ocupante vai automaticamente pro sidebar (sem assento)
   seats[toSeat] = dragAlunoId;
   dragAlunoId = null; dragFromSeat = null;
   salvarStorage();
@@ -2553,7 +2583,6 @@ function abrirMenuCadeira(seatIdx) {
   const seats = state.assentos[turmaSelecionada];
   const alunoId = seats[seatIdx] || null;
   if (alunoId) {
-    // Remover aluno da cadeira
     const aluno = state.alunos.find(a => a.id === alunoId);
     confirmar('🪑 Remover da cadeira', `Remover "${aluno ? aluno.nome : 'este aluno'}" da cadeira ${seatIdx + 1}?`, () => {
       seats[seatIdx] = null;
@@ -2561,20 +2590,27 @@ function abrirMenuCadeira(seatIdx) {
       salvarStorage(); renderMapa();
     });
   } else {
-    // Alocar aluno não colocado
     const ocupados = new Set(Object.values(seats).filter(v => v));
     const disponiveis = state.alunos.filter(a => a.turmaId === turmaSelecionada && !ocupados.has(a.id));
     if (!disponiveis.length) { toast('Todos os alunos já estão alocados!'); return; }
-    // Popup simples
-    const nomes = disponiveis.map((a,i) => `${i+1}. ${a.nome}`).join('\n');
-    const escolha = prompt(`Cadeira ${seatIdx+1} — Escolha um aluno (número):\n\n${nomes}`);
-    if (!escolha) return;
-    const idx = parseInt(escolha) - 1;
-    if (idx >= 0 && idx < disponiveis.length) {
-      seats[seatIdx] = disponiveis[idx].id;
-      salvarStorage(); renderMapa();
-      toast(`${disponiveis[idx].nome} alocado(a)! ✅`);
-    }
+    // Modal de seleção
+    const sel = document.getElementById('alocar-select');
+    sel.innerHTML = disponiveis.map(a => `<option value="${a.id}">${escapeHtml(a.nome)}</option>`).join('');
+    document.getElementById('alocar-cadeira-num').textContent = seatIdx + 1;
+    const btn = document.getElementById('alocar-confirmar');
+    const novo = btn.cloneNode(true);
+    btn.parentNode.replaceChild(novo, btn);
+    novo.addEventListener('click', () => {
+      const id = document.getElementById('alocar-select').value;
+      if (id) {
+        seats[seatIdx] = id;
+        salvarStorage(); renderMapa();
+        const a = state.alunos.find(x => x.id === id);
+        toast(`${a ? a.nome : 'Aluno'} alocado(a)! ✅`);
+      }
+      fecharModal('modal-alocar');
+    });
+    abrirModal('modal-alocar');
   }
 }
 
@@ -2602,7 +2638,7 @@ function imprimirMapa() {
       ${grid}
     </div>`;
 
-  area.style.display = 'flex';
+  area.style.display = 'block';
   window.print();
   area.style.display = 'none';
   area.innerHTML = '';
@@ -2708,29 +2744,43 @@ function embaralharProva() {
       .forEach(a => todosAlunos.push({ ...a, turmaOrigem: t.nome }));
   });
 
-  // Embaralhar
+  // Embaralhar: vision na frente, depois outros, fixos por último
   const vision = shuffleArr(todosAlunos.filter(a => a.tipo === 'vision'));
   const outros = shuffleArr(todosAlunos.filter(a => a.tipo !== 'vision' && a.tipo !== 'fixed'));
   const fixos  = todosAlunos.filter(a => a.tipo === 'fixed');
   const ordenados = [...vision, ...outros, ...fixos];
 
-  // Distribuição HOMOGÊNEA: divide igualmente entre as salas
+  // Capacidade real de cada sala
+  const capacidades = {};
+  salaIds.forEach(id => {
+    const t = state.turmas.find(x => x.id === id);
+    capacidades[id] = t ? t.cols * t.rows : 0;
+  });
+  const capacidadeTotal = salaIds.reduce((s, id) => s + capacidades[id], 0);
+
   const totalAlunos = ordenados.length;
+  const sobras = [];
+
+  // Distribuição proporcional respeitando a capacidade de cada sala
   const numSalas = salaIds.length;
   const porSala = Math.floor(totalAlunos / numSalas);
-  let resto = totalAlunos % numSalas; // primeiras salas recebem 1 a mais
+  let resto = totalAlunos % numSalas;
 
   const novaAlocacao = {};
   salaIds.forEach(id => { novaAlocacao[id] = {}; });
 
   let alunoIdx = 0;
   for (const salaId of salaIds) {
-    const qtd = porSala + (resto-- > 0 ? 1 : 0);
+    const qtdIdeal = porSala + (resto-- > 0 ? 1 : 0);
+    const qtd = Math.min(qtdIdeal, capacidades[salaId]);
     for (let seat = 0; seat < qtd; seat++) {
       if (alunoIdx >= ordenados.length) break;
       novaAlocacao[salaId][seat] = ordenados[alunoIdx++];
     }
   }
+
+  // Alunos que sobraram (capacidade excedida)
+  while (alunoIdx < ordenados.length) sobras.push(ordenados[alunoIdx++]);
 
   provaState.alocacao = novaAlocacao;
   provaTouchSel = null;
@@ -2739,9 +2789,20 @@ function embaralharProva() {
   document.getElementById('prova-empty').style.display = 'none';
   document.getElementById('prova-resultado').style.display = 'block';
   document.getElementById('btn-limpar-prova').style.display = 'inline-flex';
-  document.getElementById('prova-sobra-wrap').style.display = 'none';
 
-  toast(`✅ ${totalAlunos} alunos distribuídos em ${numSalas} sala(s) — ~${porSala} por sala`);
+  // Mostrar sobras se houver
+  const sobraWrap = document.getElementById('prova-sobra-wrap');
+  const sobraLista = document.getElementById('prova-sobra-lista');
+  if (sobras.length) {
+    sobraLista.innerHTML = sobras.map(a =>
+      `<span class="prova-chip">${escapeHtml(a.nome)} <span style="opacity:0.6;font-size:0.7rem">(${escapeHtml(a.turmaOrigem)})</span></span>`
+    ).join('');
+    sobraWrap.style.display = 'block';
+    toast(`⚠️ ${sobras.length} aluno(s) sem sala — capacidade excedida.`, 'error');
+  } else {
+    sobraWrap.style.display = 'none';
+    toast(`✅ ${totalAlunos} alunos distribuídos em ${numSalas} sala(s)`);
+  }
 }
 
 function renderProvaResultado() {
@@ -2819,7 +2880,7 @@ function provaClicarLinha(salaId, seatIdx) {
   } else {
     const { fromSala, fromSeat } = provaTouchSel;
 
-    // Mesma linha: cancelar
+    // Mesma linha: cancelar seleção
     if (fromSala === salaId && fromSeat === seatIdx) {
       provaTouchSel = null;
       renderProvaResultado();
@@ -2829,23 +2890,13 @@ function provaClicarLinha(salaId, seatIdx) {
     const alunoMovendo = provaState.alocacao[fromSala][fromSeat];
     const alunoDestino = provaState.alocacao[salaId]?.[seatIdx] || null;
 
-    // Mover para vazio: só permite se a linha for realmente vazia
     if (!alunoDestino) {
-      // Encontrar próximo índice livre na sala destino
-      const capDest = (state.turmas.find(x => x.id === salaId)?.cols || 6) *
-                      (state.turmas.find(x => x.id === salaId)?.rows || 5);
-      let novaSeat = seatIdx;
-      // Garante que o seat não está ocupado
-      if (provaState.alocacao[salaId][novaSeat]) {
-        // Procura próximo vazio
-        for (let s = 0; s < capDest; s++) {
-          if (!provaState.alocacao[salaId][s]) { novaSeat = s; break; }
-        }
-      }
-      provaState.alocacao[salaId][novaSeat] = alunoMovendo;
+      // Mover para vazio
+      if (!provaState.alocacao[salaId]) provaState.alocacao[salaId] = {};
+      provaState.alocacao[salaId][seatIdx] = alunoMovendo;
       delete provaState.alocacao[fromSala][fromSeat];
     } else {
-      // Swap entre dois alunos
+      // Swap entre dois alunos (inclusive entre salas diferentes)
       provaState.alocacao[salaId][seatIdx] = alunoMovendo;
       provaState.alocacao[fromSala][fromSeat] = alunoDestino;
     }
@@ -3126,8 +3177,14 @@ function importarDados(ev) {
     try {
       const d = JSON.parse(e.target.result);
       if (!d.turmas || !d.alunos) throw new Error('Arquivo inválido.');
-      state = d; salvarStorage();
-      renderTurmas(); renderSelectTurmaMapa(); atualizarPainelAlunos();
+      if (!d.assentos) d.assentos = {};
+      state = d;
+      salvarStorage();
+      renderDashboard();
+      renderTurmas();
+      renderSelectTurmaMapa();
+      atualizarPainelAlunos();
+      if (turmaSelecionada) renderMapa();
       toast('Dados importados! ✅');
     } catch(err) { toast('Erro: ' + err.message, 'error'); }
   };
