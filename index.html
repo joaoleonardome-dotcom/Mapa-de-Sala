@@ -1451,12 +1451,12 @@
     <div id="config-tipos-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px"></div>
 
     <!-- Formulário para novo tipo -->
-    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px">
-      <div style="font-size:0.78rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px">
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px">
+      <div style="font-size:0.78rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px">
         ＋ Novo Tipo
       </div>
-      <div class="form-row" style="margin-bottom:0;align-items:flex-end">
-        <div class="form-group" style="min-width:140px;max-width:200px">
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group" style="min-width:130px;max-width:180px">
           <label>ID interno</label>
           <input type="text" id="cfg-tipo-id" placeholder="ex: tdah" maxlength="20"
             oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
@@ -1465,22 +1465,19 @@
           <label>Nome exibido</label>
           <input type="text" id="cfg-tipo-label" placeholder="ex: TDAH / Hiperatividade" maxlength="40">
         </div>
-        <div class="form-group" style="min-width:120px;max-width:140px">
+        <div class="form-group" style="min-width:110px;max-width:130px">
           <label>Emoji / Ícone</label>
           <input type="text" id="cfg-tipo-emoji" placeholder="🧠" maxlength="4">
         </div>
-        <div class="form-group" style="min-width:120px;max-width:140px">
+        <div class="form-group" style="min-width:100px;max-width:120px">
           <label>Cor</label>
           <input type="color" id="cfg-tipo-cor" value="#6c63ff"
-            style="height:42px;padding:4px 6px;cursor:pointer">
-        </div>
-        <div class="form-group" style="min-width:0;flex:0">
-          <label>&nbsp;</label>
-          <button class="btn btn-primary" onclick="adicionarTipoCustom()" style="white-space:nowrap">
-            ＋ Adicionar
-          </button>
+            style="height:42px;padding:4px 6px;cursor:pointer;width:100%">
         </div>
       </div>
+      <button class="btn btn-primary" onclick="adicionarTipoCustom()">
+        ＋ Adicionar Tipo
+      </button>
     </div>
   </div>
 
@@ -1518,42 +1515,63 @@
   <!-- ── SEÇÃO: SEGURANÇA ── -->
   <div class="card" style="margin-bottom:20px">
     <div class="card-title"><span class="icon">🔐</span> Segurança — Trocar Senha</div>
-    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:18px;line-height:1.5">
-      A nova senha ficará salva neste navegador. Se usar em outro dispositivo, repita a troca.
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:20px;line-height:1.5">
+      A nova senha ficará salva neste navegador. Se usar em outro dispositivo, repita a troca lá também.
     </p>
-    <div class="form-row" style="max-width:480px">
+
+    <div style="max-width:460px;display:flex;flex-direction:column;gap:14px">
+
       <div class="form-group">
         <label>Senha atual</label>
         <div style="position:relative">
           <input type="password" id="cfg-senha-atual" placeholder="Digite a senha atual"
-            style="padding-right:44px">
+            style="padding-right:46px">
           <button onclick="toggleVisPass('cfg-senha-atual',this)"
-            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text3)">👁️</button>
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+            background:none;border:none;cursor:pointer;font-size:1rem;
+            color:var(--text3);padding:4px;line-height:1;transition:color 0.2s"
+            onmouseenter="this.style.color='var(--text)'"
+            onmouseleave="this.style.color='var(--text3)'">👁️</button>
         </div>
       </div>
+
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group">
+          <label>Nova senha</label>
+          <div style="position:relative">
+            <input type="password" id="cfg-senha-nova" placeholder="Mínimo 4 caracteres"
+              style="padding-right:46px">
+            <button onclick="toggleVisPass('cfg-senha-nova',this)"
+              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+              background:none;border:none;cursor:pointer;font-size:1rem;
+              color:var(--text3);padding:4px;line-height:1;transition:color 0.2s"
+              onmouseenter="this.style.color='var(--text)'"
+              onmouseleave="this.style.color='var(--text3)'">👁️</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirmar nova senha</label>
+          <div style="position:relative">
+            <input type="password" id="cfg-senha-confirma" placeholder="Repita a nova senha"
+              style="padding-right:46px">
+            <button onclick="toggleVisPass('cfg-senha-confirma',this)"
+              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+              background:none;border:none;cursor:pointer;font-size:1rem;
+              color:var(--text3);padding:4px;line-height:1;transition:color 0.2s"
+              onmouseenter="this.style.color='var(--text)'"
+              onmouseleave="this.style.color='var(--text3)'">👁️</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="cfg-senha-msg" style="font-size:0.82rem;font-weight:700;
+        padding:10px 14px;border-radius:var(--radius-sm);display:none"></div>
+
+      <div>
+        <button class="btn btn-primary" onclick="trocarSenha()">🔑 Salvar Nova Senha</button>
+      </div>
+
     </div>
-    <div class="form-row" style="max-width:480px">
-      <div class="form-group">
-        <label>Nova senha</label>
-        <div style="position:relative">
-          <input type="password" id="cfg-senha-nova" placeholder="Mínimo 4 caracteres"
-            style="padding-right:44px">
-          <button onclick="toggleVisPass('cfg-senha-nova',this)"
-            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text3)">👁️</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Confirmar nova senha</label>
-        <div style="position:relative">
-          <input type="password" id="cfg-senha-confirma" placeholder="Repita a nova senha"
-            style="padding-right:44px">
-          <button onclick="toggleVisPass('cfg-senha-confirma',this)"
-            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text3)">👁️</button>
-        </div>
-      </div>
-    </div>
-    <div id="cfg-senha-msg" style="font-size:0.82rem;font-weight:700;margin-bottom:12px;display:none"></div>
-    <button class="btn btn-primary" onclick="trocarSenha()">🔑 Salvar Nova Senha</button>
   </div>
 
   <!-- ── SEÇÃO: DADOS ── -->
@@ -1610,10 +1628,13 @@
   <div class="card">
     <div class="card-title"><span class="icon">ℹ️</span> Sobre o MapaSala</div>
     <div style="font-size:0.88rem;color:var(--text2);line-height:1.8">
+      <div>👨‍🏫 <strong>Criador:</strong> Prof. João Leonardo Muniz</div>
+      <div style="margin-top:4px;padding-top:10px;border-top:1px solid var(--border)">
       <div>📱 <strong>Versão:</strong> 2.1.0</div>
       <div>☁️ <strong>Sincronização:</strong> Firebase Realtime Database</div>
       <div>💾 <strong>Cache local:</strong> localStorage</div>
       <div>📲 <strong>PWA:</strong> Instalável como aplicativo</div>
+      </div>
       <div style="margin-top:10px;font-size:0.78rem;color:var(--text3)">
         Os dados são salvos automaticamente no Firebase e em cache local no navegador.
       </div>
@@ -3593,7 +3614,9 @@ function trocarSenha() {
   const mostrarMsg = (txt, ok) => {
     msgEl.style.display = 'block';
     msgEl.textContent = txt;
-    msgEl.style.color = ok ? '#007a6e' : 'var(--accent2)';
+    msgEl.style.color      = ok ? '#007a6e' : '#b83a3a';
+    msgEl.style.background = ok ? 'rgba(0,168,150,0.10)' : 'rgba(224,92,92,0.10)';
+    msgEl.style.border     = ok ? '1px solid rgba(0,168,150,0.25)' : '1px solid rgba(224,92,92,0.25)';
   };
 
   if (!atual) { mostrarMsg('❌ Informe a senha atual.', false); return; }
