@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MapaSala — Gerenciador de Turmas</title>
+<title>Mapa de Sala — Gerenciador de Turmas</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="MapaSala">
-  <meta name="application-name" content="MapaSala">
+  <meta name="apple-mobile-web-app-title" content="Mapa de Sala">
+  <meta name="application-name" content="Mapa de Sala">
   <meta name="theme-color" content="#00a896">
   <meta name="msapplication-TileColor" content="#00a896">
   <meta name="msapplication-TileImage" content="icons/icon-192.png">
@@ -929,6 +929,104 @@
     margin-bottom: 12px;
     display: flex; align-items: center; gap: 8px;
   }
+
+  /* ─── FILTRO TIPO / NECESSIDADE ─── */
+  .filtro-resultado-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .filtro-resultado-header {
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    color: #fff;
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .filtro-resultado-titulo {
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .filtro-resultado-count {
+    background: rgba(255,255,255,0.22);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.8rem; font-weight: 800;
+    white-space: nowrap;
+  }
+  .filtro-resultado-body { padding: 16px 20px; }
+  .filtro-turma-grupo {
+    margin-bottom: 16px;
+  }
+  .filtro-turma-grupo:last-child { margin-bottom: 0; }
+  .filtro-turma-label {
+    font-size: 0.72rem; font-weight: 800; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .filtro-alunos-lista {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .filtro-aluno-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 0.85rem; font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .filtro-aluno-chip:hover {
+    border-color: var(--accent);
+    background: rgba(0,168,150,0.08);
+    color: #007a6e;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0,168,150,0.15);
+  }
+  .filtro-aluno-chip-avatar {
+    width: 26px; height: 26px; border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+  .filtro-aluno-chip-assento {
+    font-size: 0.72rem; font-weight: 600;
+    color: var(--text3);
+    margin-left: 2px;
+  }
+  .filtro-turma-chk-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 6px;
+    cursor: pointer; transition: background 0.15s;
+    font-size: 0.85rem; font-weight: 600; color: var(--text);
+    user-select: none;
+  }
+  .filtro-turma-chk-item:hover { background: var(--surface3); }
+  .filtro-turma-chk-item input[type=checkbox] { display: none; }
+  .filtro-turma-chk-box {
+    width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
+    border: 1.5px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; color: transparent;
+    transition: all 0.15s;
+  }
+  .filtro-turma-chk-item.marcado .filtro-turma-chk-box {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .filtro-turma-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .filtro-sem-alunos {
+    color: var(--text3); font-size: 0.88rem;
+    padding: 12px 0;
+    display: flex; align-items: center; gap: 8px;
+  }
   .dash-turmas-recentes {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1122,13 +1220,12 @@
     }
     body.printing-prova .prova-pagina {
       width: 187mm;
-      min-height: 258mm;
       overflow: visible;
       display: block;
       page-break-after: always;
       break-after: always;
-      page-break-inside: auto;
-      break-inside: auto;
+      page-break-inside: avoid;
+      break-inside: avoid;
       box-sizing: border-box;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -1244,7 +1341,7 @@
 <div id="tela-login">
   <div class="login-card" id="login-card">
     <div class="login-logo">🗺️</div>
-    <div class="login-titulo">Mapa<span>Sala</span></div>
+    <div class="login-titulo">Mapa de <span>Sala</span></div>
     <div class="login-subtitulo">Digite a senha para acessar o sistema</div>
     <div class="login-input-wrap">
       <input class="login-input" type="password" id="login-senha"
@@ -1273,7 +1370,7 @@
 <header>
   <div class="logo">
     <div class="logo-icon">🗺️</div>
-    Mapa<span>Sala</span>
+    Mapa de <span>Sala</span>
   </div>
   <div class="tabs-nav">
     <button class="tab-btn active" onclick="showTab('dashboard', event)">🏠 Início</button>
@@ -1352,35 +1449,44 @@
     <button class="atalho-btn" onclick="showTabDireto('mapa')"><span class="ab-icon">🪑</span> Ver Mapa</button>
   </div>
 
-  <!-- Turmas filtradas por segmento -->
-  <div id="dash-turmas-secao" style="display:none">
-    <div class="dash-section-title" id="dash-turmas-titulo">🏫 Turmas</div>
-    <div class="dash-turmas-recentes" id="dash-turmas-lista"></div>
-    <div id="dash-empty-seg" class="empty-state" style="display:none">
-      <div class="emo">🏫</div>
-      <p id="dash-empty-seg-txt">Nenhuma turma neste segmento.</p>
-    </div>
-  </div>
   <div id="dash-empty" class="empty-state" style="display:none">
     <div class="emo">🏫</div>
     <p>Nenhuma turma ainda.<br>Clique em <strong>Nova Turma</strong> para começar!</p>
   </div>
 
-  <!-- Botões grandes Fundamental I / II -->
-  <div class="segmento-btns">
-    <button class="segmento-btn segmento-btn-fi" id="dash-btn-fi" onclick="filtrarDashSegmento('FI')">
-      <span class="seg-emoji">📗</span>
-      <span>Fundamental I</span>
-      <span class="seg-sub">4º e 5º Ano</span>
-      <span class="segmento-badge" id="dash-badge-fi">0 turmas</span>
-    </button>
-    <button class="segmento-btn segmento-btn-fii" id="dash-btn-fii" onclick="filtrarDashSegmento('FII')">
-      <span class="seg-emoji">📘</span>
-      <span>Fundamental II</span>
-      <span class="seg-sub">6º ao 9º Ano</span>
-      <span class="segmento-badge" id="dash-badge-fii">0 turmas</span>
-    </button>
+  <!-- Filtro por Tipo / Necessidade -->
+  <div id="dash-filtro-tipo-wrap" style="display:none">
+    <div class="dash-section-title" style="margin-top:8px">🏷️ Filtrar por Tipo / Necessidade</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px">
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:0" id="filtro-tipo-controls">
+        <div class="form-group" style="min-width:200px;max-width:320px;margin-bottom:0">
+          <label>Tipo / Necessidade</label>
+          <select id="filtro-tipo-select" onchange="filtroTipoChanged()">
+            <option value="">Selecione um tipo…</option>
+          </select>
+        </div>
+        <div class="form-group" style="min-width:160px;max-width:220px;margin-bottom:0" id="filtro-turma-wrap">
+          <label>Turma <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
+          <select id="filtro-turma-select">
+            <option value="">Todas as turmas</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="mostrarAlunosPorTipo()" id="btn-filtro-tipo" disabled>
+            🔍 Mostrar Alunos
+          </button>
+          <button class="btn btn-secondary" onclick="limparFiltroTipo()" id="btn-limpar-filtro" style="display:none">
+            🗑️ Limpar
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Resultado do filtro -->
+    <div id="filtro-tipo-resultado" style="display:none"></div>
   </div>
+
+  <!-- Gráficos e estatísticas -->
+  <div id="dash-graficos"></div>
 
 </div>
 
@@ -1690,68 +1796,6 @@
     </div>
   </div>
 
-  <!-- ── SEÇÃO: SEGURANÇA ── -->
-  <div class="card" style="margin-bottom:20px">
-    <div class="card-title"><span class="icon">🔐</span> Segurança — Trocar Senha</div>
-    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:20px;line-height:1.5">
-      A nova senha ficará salva neste navegador. Se usar em outro dispositivo, repita a troca lá também.
-    </p>
-
-    <div style="max-width:460px;display:flex;flex-direction:column;gap:14px">
-
-      <div class="form-group">
-        <label>Senha atual</label>
-        <div style="position:relative">
-          <input type="password" id="cfg-senha-atual" placeholder="Digite a senha atual"
-            style="padding-right:46px">
-          <button onclick="toggleVisPass('cfg-senha-atual',this)"
-            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
-            background:none;border:none;cursor:pointer;font-size:1rem;
-            color:var(--text3);padding:4px;line-height:1;transition:color 0.2s"
-            onmouseenter="this.style.color='var(--text)'"
-            onmouseleave="this.style.color='var(--text3)'">👁️</button>
-        </div>
-      </div>
-
-      <div class="form-row" style="margin-bottom:0">
-        <div class="form-group">
-          <label>Nova senha</label>
-          <div style="position:relative">
-            <input type="password" id="cfg-senha-nova" placeholder="Mínimo 4 caracteres"
-              style="padding-right:46px">
-            <button onclick="toggleVisPass('cfg-senha-nova',this)"
-              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
-              background:none;border:none;cursor:pointer;font-size:1rem;
-              color:var(--text3);padding:4px;line-height:1;transition:color 0.2s"
-              onmouseenter="this.style.color='var(--text)'"
-              onmouseleave="this.style.color='var(--text3)'">👁️</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Confirmar nova senha</label>
-          <div style="position:relative">
-            <input type="password" id="cfg-senha-confirma" placeholder="Repita a nova senha"
-              style="padding-right:46px">
-            <button onclick="toggleVisPass('cfg-senha-confirma',this)"
-              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
-              background:none;border:none;cursor:pointer;font-size:1rem;
-              color:var(--text3);padding:4px;line-height:1;transition:color 0.2s"
-              onmouseenter="this.style.color='var(--text)'"
-              onmouseleave="this.style.color='var(--text3)'">👁️</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="cfg-senha-msg" style="font-size:0.82rem;font-weight:700;
-        padding:10px 14px;border-radius:var(--radius-sm);display:none"></div>
-
-      <div>
-        <button class="btn btn-primary" onclick="trocarSenha()">🔑 Salvar Nova Senha</button>
-      </div>
-
-    </div>
-  </div>
-
   <!-- ── SEÇÃO: DADOS ── -->
   <div class="card" style="margin-bottom:20px">
     <div class="card-title"><span class="icon">💾</span> Dados e Backup</div>
@@ -1801,7 +1845,7 @@
 
   <!-- ── SEÇÃO: SOBRE ── -->
   <div class="card">
-    <div class="card-title"><span class="icon">ℹ️</span> Sobre o MapaSala</div>
+    <div class="card-title"><span class="icon">ℹ️</span> Sobre o Mapa de Sala</div>
     <div style="font-size:0.88rem;color:var(--text2);line-height:1.8">
       <div>👨‍🏫 <strong>Criador:</strong> Prof. João Leonardo Muniz</div>
       <div style="margin-top:4px;padding-top:10px;border-top:1px solid var(--border)">
@@ -2220,17 +2264,391 @@ function renderDashboard() {
   document.getElementById('stat-alocados').textContent = totalAlocados;
   document.getElementById('stat-sem-assento').textContent = Math.max(0, totalAlunos - totalAlocados);
 
-  // Badges dos botões de segmento
-  const ctFi  = state.turmas.filter(t => (t.segmento || 'FII') === 'FI').length;
-  const ctFii = state.turmas.filter(t => (t.segmento || 'FII') === 'FII').length;
-  const bFi  = document.getElementById('dash-badge-fi');
-  const bFii = document.getElementById('dash-badge-fii');
-  if (bFi)  bFi.textContent  = ctFi  + ' turma' + (ctFi  !== 1 ? 's' : '');
-  if (bFii) bFii.textContent = ctFii + ' turma' + (ctFii !== 1 ? 's' : '');
-
   // Mostrar estado vazio se não há turmas
   const empty = document.getElementById('dash-empty');
   if (empty) empty.style.display = state.turmas.length ? 'none' : 'block';
+
+  inicializarFiltroTipo();
+  renderGraficosDashboard();
+}
+
+function renderGraficosDashboard() {
+  const el = document.getElementById('dash-graficos');
+  if (!el) return;
+  if (!state.turmas.length) { el.innerHTML = ''; return; }
+
+  // ── Dados base ──
+  const totalTurmas  = state.turmas.length;
+  const totalAlunos  = state.alunos.length;
+  let   totalAlocados = 0;
+  let   totalCapacidade = 0;
+  state.turmas.forEach(t => {
+    totalCapacidade += t.cols * t.rows;
+    totalAlocados   += Object.values(state.assentos[t.id] || {}).filter(v => v).length;
+  });
+  const totalVazios = totalCapacidade - totalAlocados;
+  const pctOcup = totalCapacidade > 0 ? Math.round((totalAlocados / totalCapacidade) * 100) : 0;
+
+  // Contagem por tipo de aluno
+  const tiposLabel = { normal: 'Normal', fixed: 'Laudo/Fixo', vision: 'Visão', conc: 'Concentração' };
+  const tiposCor   = { normal: '#00a896', fixed: '#e05c5c', vision: '#00b88a', conc: '#d4891a' };
+  const contagemTipos = {};
+  state.alunos.forEach(a => {
+    const k = a.tipo || 'normal';
+    contagemTipos[k] = (contagemTipos[k] || 0) + 1;
+  });
+
+  // Turmas por série (extrair série do nome)
+  const porSerie = {};
+  state.turmas.forEach(t => {
+    const serie = extrairSerie(t.nome) || t.nome;
+    porSerie[serie] = (porSerie[serie] || 0) + 1;
+  });
+  const seriesOrdenadas = Object.keys(porSerie).sort((a,b) => a.localeCompare(b,'pt-BR'));
+
+  // Alunos por turma (top 8)
+  const alunosPorTurma = state.turmas
+    .map(t => ({ nome: t.nome, qt: state.alunos.filter(a => a.turmaId === t.id).length }))
+    .sort((a,b) => b.qt - a.qt)
+    .slice(0, 8);
+
+  // Ocupação por turma (top 6 para barras)
+  const ocupPorTurma = state.turmas.map(t => {
+    const cap = t.cols * t.rows;
+    const aloc = Object.values(state.assentos[t.id] || {}).filter(v => v).length;
+    return { nome: t.nome, pct: cap > 0 ? Math.round((aloc/cap)*100) : 0, aloc, cap };
+  }).sort((a,b) => b.pct - a.pct).slice(0, 6);
+
+  // Segmento
+  const ctFI  = state.turmas.filter(t => (t.segmento||'FII') === 'FI').length;
+  const ctFII = state.turmas.filter(t => (t.segmento||'FII') === 'FII').length;
+
+  // ── Renderizar ──
+  const isDark = document.body.classList.contains('dark');
+  const textColor   = isDark ? '#c8d8d0' : '#2c3a35';
+  const text2Color  = isDark ? '#7a9e94' : '#5a7268';
+  const borderColor = isDark ? '#2e3d38' : '#e4dcc8';
+  const bgCard      = isDark ? '#1e2b26' : '#fdf8f0';
+
+  // SVG donut helper
+  function donut(pct, cor, bg, r=34, stroke=9) {
+    const circ = 2 * Math.PI * r;
+    const dash = (pct/100) * circ;
+    const sz = (r+stroke)*2 + 4;
+    const c = r+stroke+2;
+    return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${bg}" stroke-width="${stroke}"/>
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${cor}" stroke-width="${stroke}"
+        stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
+        stroke-dashoffset="${(circ/4).toFixed(1)}" stroke-linecap="round"/>
+      <text x="${c}" y="${c+1}" text-anchor="middle" dominant-baseline="middle"
+        font-size="13" font-weight="800" fill="${cor}" font-family="Nunito,sans-serif">${pct}%</text>
+    </svg>`;
+  }
+
+  // Barras horizontais para alunos por turma
+  const maxQt = Math.max(...alunosPorTurma.map(x => x.qt), 1);
+  const barrasAlunos = alunosPorTurma.map((t,i) => {
+    const pct = Math.round((t.qt/maxQt)*100);
+    const cores = ['#00a896','#00b88a','#d4891a','#e05c5c','#6c63ff','#00a896','#00b88a','#d4891a'];
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="width:90px;font-size:0.75rem;font-weight:700;color:${text2Color};
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0" title="${escapeHtml(t.nome)}">${escapeHtml(t.nome)}</div>
+      <div style="flex:1;background:${isDark?'#2e3d38':'#eee8d8'};border-radius:6px;height:16px;overflow:hidden">
+        <div style="width:${pct}%;background:${cores[i%cores.length]};height:100%;border-radius:6px;
+          transition:width 0.6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:6px">
+        </div>
+      </div>
+      <div style="width:24px;font-size:0.78rem;font-weight:800;color:${textColor};text-align:right;flex-shrink:0">${t.qt}</div>
+    </div>`;
+  }).join('');
+
+  // Pie de tipos como barras empilhadas
+  const tiposComDados = Object.entries(contagemTipos).filter(([,v])=>v>0);
+  const totalTipos = tiposComDados.reduce((s,[,v])=>s+v,0);
+  const pilhaTipos = tiposComDados.map(([k,v]) => {
+    const pct = totalTipos > 0 ? (v/totalTipos*100).toFixed(1) : 0;
+    const cor = tiposCor[k] || '#8fa89e';
+    const label = tiposLabel[k] || k;
+    return `<div style="flex:${v};background:${cor};height:100%;min-width:4px" title="${label}: ${v} (${pct}%)"></div>`;
+  }).join('');
+  const legendaTipos = tiposComDados.map(([k,v]) => {
+    const cor = tiposCor[k] || '#8fa89e';
+    const label = tiposLabel[k] || k;
+    const pct = totalTipos > 0 ? Math.round(v/totalTipos*100) : 0;
+    return `<div style="display:flex;align-items:center;gap:6px">
+      <div style="width:10px;height:10px;border-radius:3px;background:${cor};flex-shrink:0"></div>
+      <span style="font-size:0.78rem;color:${text2Color};font-weight:700">${label}</span>
+      <span style="font-size:0.78rem;color:${textColor};font-weight:800;margin-left:auto;padding-left:8px">${v} <span style="color:${text2Color};font-weight:600">(${pct}%)</span></span>
+    </div>`;
+  }).join('');
+
+  // Barras de ocupação por turma
+  const barrasOcup = ocupPorTurma.map(t => {
+    const cor = t.pct >= 80 ? '#00a896' : t.pct >= 50 ? '#d4891a' : '#e05c5c';
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:0.75rem;font-weight:700;color:${text2Color};
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px" title="${escapeHtml(t.nome)}">${escapeHtml(t.nome)}</span>
+        <span style="font-size:0.75rem;font-weight:800;color:${cor};flex-shrink:0">${t.aloc}/${t.cap}</span>
+      </div>
+      <div style="background:${isDark?'#2e3d38':'#eee8d8'};border-radius:6px;height:10px;overflow:hidden">
+        <div style="width:${t.pct}%;background:${cor};height:100%;border-radius:6px;transition:width 0.6s ease"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Segmentos
+  const segTotal = ctFI + ctFII || 1;
+  const pctFI  = Math.round(ctFI/segTotal*100);
+  const pctFII = Math.round(ctFII/segTotal*100);
+
+  el.innerHTML = `
+  <div style="margin-top:8px">
+    <div style="font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;
+      color:${textColor};margin-bottom:16px;display:flex;align-items:center;gap:8px">
+      📊 Estatísticas e Gráficos
+    </div>
+
+    <!-- Linha 1: Ocupação geral + Tipos de aluno -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:16px">
+
+      <!-- Card: Ocupação geral -->
+      <div style="background:${bgCard};border:1px solid ${borderColor};border-radius:14px;padding:20px">
+        <div style="font-size:0.82rem;font-weight:800;color:${text2Color};
+          text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">🪑 Ocupação Geral</div>
+        <div style="display:flex;align-items:center;gap:16px">
+          ${donut(pctOcup,'#00a896',isDark?'#2e3d38':'#e4dcc8')}
+          <div style="flex:1">
+            <div style="font-size:0.85rem;font-weight:700;color:${textColor};margin-bottom:6px">
+              <span style="color:#00a896;font-weight:800">${totalAlocados}</span> alocados de <span style="font-weight:800">${totalCapacidade}</span> cadeiras
+            </div>
+            <div style="font-size:0.82rem;color:${text2Color};margin-bottom:4px">
+              🟡 ${totalVazios} cadeiras vazias
+            </div>
+            <div style="font-size:0.82rem;color:${text2Color}">
+              👥 ${totalAlunos} alunos cadastrados
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Tipos de aluno -->
+      <div style="background:${bgCard};border:1px solid ${borderColor};border-radius:14px;padding:20px">
+        <div style="font-size:0.82rem;font-weight:800;color:${text2Color};
+          text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">👤 Perfil dos Alunos</div>
+        ${totalTipos > 0 ? `
+        <div style="display:flex;height:18px;border-radius:8px;overflow:hidden;margin-bottom:12px;gap:2px">
+          ${pilhaTipos}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">${legendaTipos}</div>
+        ` : `<div style="color:${text2Color};font-size:0.85rem">Nenhum aluno cadastrado.</div>`}
+      </div>
+
+      <!-- Card: Segmentos -->
+      <div style="background:${bgCard};border:1px solid ${borderColor};border-radius:14px;padding:20px">
+        <div style="font-size:0.82rem;font-weight:800;color:${text2Color};
+          text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">🏫 Segmentos</div>
+        <div style="display:flex;gap:12px;margin-bottom:14px">
+          <div style="flex:1;background:${isDark?'#1a2e29':'#d4f0eb'};border-radius:10px;padding:12px;text-align:center">
+            <div style="font-size:1.5rem;font-weight:800;color:#00a896">${ctFI}</div>
+            <div style="font-size:0.75rem;font-weight:700;color:${text2Color}">Fund. I</div>
+            <div style="font-size:0.7rem;color:${text2Color};opacity:0.8">${pctFI}%</div>
+          </div>
+          <div style="flex:1;background:${isDark?'#1e1e38':'#e8e6ff'};border-radius:10px;padding:12px;text-align:center">
+            <div style="font-size:1.5rem;font-weight:800;color:#6c63ff">${ctFII}</div>
+            <div style="font-size:0.75rem;font-weight:700;color:${text2Color}">Fund. II</div>
+            <div style="font-size:0.7rem;color:${text2Color};opacity:0.8">${pctFII}%</div>
+          </div>
+        </div>
+        <div style="background:${isDark?'#2e3d38':'#eee8d8'};border-radius:6px;height:10px;overflow:hidden;display:flex">
+          <div style="width:${pctFI}%;background:#00a896;height:100%;transition:width 0.6s"></div>
+          <div style="width:${pctFII}%;background:#6c63ff;height:100%;transition:width 0.6s"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Linha 2: Alunos por turma + Ocupação por turma -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:16px">
+
+      <!-- Card: Alunos por turma -->
+      <div style="background:${bgCard};border:1px solid ${borderColor};border-radius:14px;padding:20px">
+        <div style="font-size:0.82rem;font-weight:800;color:${text2Color};
+          text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">👥 Alunos por Turma</div>
+        ${alunosPorTurma.length ? barrasAlunos : `<div style="color:${text2Color};font-size:0.85rem">Nenhuma turma com alunos.</div>`}
+      </div>
+
+      <!-- Card: Ocupação por turma -->
+      <div style="background:${bgCard};border:1px solid ${borderColor};border-radius:14px;padding:20px">
+        <div style="font-size:0.82rem;font-weight:800;color:${text2Color};
+          text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">📐 Ocupação por Turma</div>
+        ${ocupPorTurma.length ? `
+          <div style="font-size:0.72rem;color:${text2Color};margin-bottom:10px;display:flex;gap:12px">
+            <span style="color:#00a896;font-weight:700">● ≥80% cheio</span>
+            <span style="color:#d4891a;font-weight:700">● 50–79%</span>
+            <span style="color:#e05c5c;font-weight:700">● &lt;50%</span>
+          </div>
+          ${barrasOcup}
+        ` : `<div style="color:${text2Color};font-size:0.85rem">Nenhuma turma com assentos configurados.</div>`}
+      </div>
+
+      <!-- Card: Turmas por série -->
+      ${seriesOrdenadas.length ? `
+      <div style="background:${bgCard};border:1px solid ${borderColor};border-radius:14px;padding:20px">
+        <div style="font-size:0.82rem;font-weight:800;color:${text2Color};
+          text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">📋 Turmas por Série</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${seriesOrdenadas.map(s => {
+            const n = porSerie[s];
+            return `<div style="background:${isDark?'#2e3d38':'#eee8d8'};border-radius:8px;padding:6px 12px;
+              display:flex;flex-direction:column;align-items:center;min-width:56px">
+              <span style="font-size:1.1rem;font-weight:800;color:#00a896">${n}</span>
+              <span style="font-size:0.72rem;font-weight:700;color:${text2Color};white-space:nowrap">${escapeHtml(s)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// FILTRO POR TIPO / NECESSIDADE (DASHBOARD)
+// ═══════════════════════════════════════════
+function inicializarFiltroTipo() {
+  const wrap = document.getElementById('dash-filtro-tipo-wrap');
+  const sel  = document.getElementById('filtro-tipo-select');
+  const selTurma = document.getElementById('filtro-turma-select');
+  if (!wrap || !sel || !selTurma) return;
+
+  wrap.style.display = state.turmas.length ? 'block' : 'none';
+  if (!state.turmas.length) return;
+
+  // Guardar seleção atual antes de repopular
+  const tipoAtual  = sel.value;
+  const turmaAtual = selTurma.value;
+
+  // Popular select de tipos
+  const todos = getTodosTipos();
+  sel.innerHTML = '<option value="">Selecione um tipo…</option>' +
+    todos.map(t => `<option value="${t.id}">${t.emoji ? t.emoji + ' ' : ''}${escapeHtml(t.label)}</option>`).join('');
+  if (tipoAtual) sel.value = tipoAtual;
+
+  // Popular select de turmas — ordem alfabética
+  const turmasOrdenadas = [...state.turmas].sort((a, b) =>
+    a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+  );
+  selTurma.innerHTML = '<option value="">Todas as turmas</option>' +
+    turmasOrdenadas.map(t => `<option value="${t.id}">${escapeHtml(t.nome)}</option>`).join('');
+  if (turmaAtual) selTurma.value = turmaAtual;
+
+  document.getElementById('btn-filtro-tipo').disabled = !sel.value;
+}
+
+function filtroTipoChanged() {
+  const sel = document.getElementById('filtro-tipo-select');
+  document.getElementById('btn-filtro-tipo').disabled = !sel.value;
+  const res = document.getElementById('filtro-tipo-resultado');
+  if (res) { res.style.display = 'none'; res.innerHTML = ''; }
+  const btnLimpar = document.getElementById('btn-limpar-filtro');
+  if (btnLimpar) btnLimpar.style.display = 'none';
+}
+
+function limparFiltroTipo() {
+  const sel = document.getElementById('filtro-tipo-select');
+  if (sel) sel.value = '';
+  const selTurma = document.getElementById('filtro-turma-select');
+  if (selTurma) selTurma.value = '';
+  const res = document.getElementById('filtro-tipo-resultado');
+  if (res) { res.style.display = 'none'; res.innerHTML = ''; }
+  const btnMostrar = document.getElementById('btn-filtro-tipo');
+  if (btnMostrar) btnMostrar.disabled = true;
+  const btnLimpar = document.getElementById('btn-limpar-filtro');
+  if (btnLimpar) btnLimpar.style.display = 'none';
+}
+
+function mostrarAlunosPorTipo() {
+  const tipoId  = document.getElementById('filtro-tipo-select').value;
+  const turmaId = document.getElementById('filtro-turma-select').value;
+  const res     = document.getElementById('filtro-tipo-resultado');
+  if (!tipoId || !res) return;
+
+  const tipoObj   = getTodosTipos().find(t => t.id === tipoId);
+  const corTipo   = tipoObj ? tipoObj.cor : '#00a896';
+  const labelTipo = tipoObj ? ((tipoObj.emoji ? tipoObj.emoji + ' ' : '') + tipoObj.label) : tipoId;
+
+  // Filtrar alunos
+  let alunos = state.alunos.filter(a => (a.tipo || 'normal') === tipoId);
+  if (turmaId) alunos = alunos.filter(a => a.turmaId === turmaId);
+
+  // Ordenar por nome
+  alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+
+  // Agrupar por turma (ordem alfabética)
+  const gruposMap = {};
+  alunos.forEach(a => {
+    const turma = state.turmas.find(t => t.id === a.turmaId);
+    const nomeT = turma ? turma.nome : '(Turma desconhecida)';
+    if (!gruposMap[a.turmaId]) gruposMap[a.turmaId] = { nome: nomeT, cor: turma ? turma.cor : '#00a896', alunos: [] };
+    gruposMap[a.turmaId].alunos.push(a);
+  });
+  const grupos = Object.values(gruposMap).sort((a, b) =>
+    a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+  );
+
+  const isDark = document.body.classList.contains('dark');
+  const text2Color = isDark ? '#7a9e94' : '#5a7268';
+
+  let gruposHtml = '';
+  if (!alunos.length) {
+    gruposHtml = `<div class="filtro-sem-alunos">😕 Nenhum aluno encontrado com este tipo${turmaId ? ' nesta turma' : ''}.</div>`;
+  } else {
+    gruposHtml = grupos.map(g => {
+      const chips = g.alunos.map(a => {
+        const seats = state.assentos[a.turmaId] || {};
+        let assentoLabel = '';
+        for (const [si, aid] of Object.entries(seats)) {
+          if (aid === a.id) { assentoLabel = 'Cadeira ' + (parseInt(si) + 1); break; }
+        }
+        const ini = a.nome.charAt(0).toUpperCase();
+        return `<div class="filtro-aluno-chip" onclick="irParaAluno('${a.id}','${a.turmaId}')" title="Ver no mapa">
+          <div class="filtro-aluno-chip-avatar" style="background:${corTipo}">${escapeHtml(ini)}</div>
+          <span>${escapeHtml(a.nome)}</span>
+          <span class="filtro-aluno-chip-assento">· ${assentoLabel || 'Sem assento'}</span>
+        </div>`;
+      }).join('');
+      return `<div class="filtro-turma-grupo">
+        <div class="filtro-turma-label">
+          <div style="width:10px;height:10px;border-radius:3px;background:${g.cor};flex-shrink:0"></div>
+          ${escapeHtml(g.nome)}
+          <span style="margin-left:4px;font-weight:600;color:${text2Color}">(${g.alunos.length} aluno${g.alunos.length !== 1 ? 's' : ''})</span>
+        </div>
+        <div class="filtro-alunos-lista">${chips}</div>
+      </div>`;
+    }).join('');
+  }
+
+  res.innerHTML = `
+    <div class="filtro-resultado-card">
+      <div class="filtro-resultado-header" style="background:linear-gradient(135deg,${corTipo},${corTipo}cc)">
+        <div class="filtro-resultado-titulo">
+          🏷️ ${escapeHtml(labelTipo)}
+          ${turmaId ? `<span style="font-size:0.8rem;opacity:0.85"> — ${escapeHtml(state.turmas.find(t => t.id === turmaId)?.nome || '')}</span>` : ''}
+        </div>
+        <div class="filtro-resultado-count">${alunos.length} aluno${alunos.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="filtro-resultado-body">
+        ${alunos.length ? `<p style="font-size:0.78rem;color:${text2Color};margin-bottom:14px">Clique em um aluno para vê-lo no mapa de sala.</p>` : ''}
+        ${gruposHtml}
+      </div>
+    </div>`;
+  res.style.display = 'block';
+
+  // Mostrar botão limpar
+  const btnLimpar = document.getElementById('btn-limpar-filtro');
+  if (btnLimpar) btnLimpar.style.display = 'inline-flex';
+
+  res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function irParaMapa(turmaId) {
@@ -2421,57 +2839,7 @@ function filtrarSegmento(seg) {
   renderTurmas();
 }
 
-function filtrarDashSegmento(seg) {
-  // Alterna: clicar no mesmo botão já ativo fecha a lista
-  const secao = document.getElementById('dash-turmas-secao');
-  const btnFi  = document.getElementById('dash-btn-fi');
-  const btnFii = document.getElementById('dash-btn-fii');
-  const jaAtivo = btnFi.classList.contains('ativo') && seg === 'FI'
-               || btnFii.classList.contains('ativo') && seg === 'FII';
-
-  if (jaAtivo) {
-    secao.style.display = 'none';
-    btnFi.classList.remove('ativo'); btnFii.classList.remove('ativo');
-    return;
-  }
-
-  btnFi.classList.toggle('ativo', seg === 'FI');
-  btnFii.classList.toggle('ativo', seg === 'FII');
-
-  const turmasFiltradas = state.turmas.filter(t => (t.segmento || 'FII') === seg);
-  const titulo = document.getElementById('dash-turmas-titulo');
-  const lista  = document.getElementById('dash-turmas-lista');
-  const emptyS = document.getElementById('dash-empty-seg');
-  const emptyT = document.getElementById('dash-empty-seg-txt');
-
-  titulo.textContent = seg === 'FI' ? '📗 Turmas — Fundamental I' : '📘 Turmas — Fundamental II';
-  secao.style.display = 'block';
-
-  if (!turmasFiltradas.length) {
-    lista.innerHTML = '';
-    emptyT.textContent = `Nenhuma turma no ${seg === 'FI' ? 'Fundamental I' : 'Fundamental II'} ainda.`;
-    emptyS.style.display = 'block';
-    return;
-  }
-  emptyS.style.display = 'none';
-  lista.innerHTML = turmasFiltradas.map(t => {
-    const alunos  = state.alunos.filter(a => a.turmaId === t.id).length;
-    const total   = t.cols * t.rows;
-    const alocados = Object.values(state.assentos[t.id] || {}).filter(v => v).length;
-    const pct = total > 0 ? Math.round((alocados / total) * 100) : 0;
-    const cor = seg === 'FI' ? '#00a896' : '#6c63ff';
-    return `<div class="dash-turma-item" onclick="irParaMapa('${t.id}')" style="border-left:3px solid ${cor}">
-      <div class="dt-nome">${escapeHtml(t.nome)}</div>
-      <div class="dt-meta">
-        <span>📐 ${t.cols}×${t.rows}</span>
-        <span>👥 ${alunos}</span>
-        <span>🪑 ${alocados}/${total}</span>
-      </div>
-      ${t.disciplina ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:2px">🧑‍🏫 ${escapeHtml(t.disciplina)}</div>` : ''}
-      <div class="dash-progress"><div class="dash-progress-bar" style="width:${pct}%;background:${cor}"></div></div>
-    </div>`;
-  }).join('');
-}
+// filtrarDashSegmento removida — substituída por renderGraficosDashboard
 
 function renderTurmas() {
   const grid  = document.getElementById('turmas-grid');
@@ -3018,8 +3386,9 @@ function confirmarImport() {
 // ═══════════════════════════════════════════
 function renderSelectTurmaMapa() {
   const sel = document.getElementById('select-turma-mapa');
+  const turmasOrdenadas = [...state.turmas].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
   sel.innerHTML = '<option value="">Selecione a turma…</option>' +
-    state.turmas.map(t => `<option value="${t.id}" ${t.id===turmaSelecionada?'selected':''}>${t.nome}</option>`).join('');
+    turmasOrdenadas.map(t => `<option value="${t.id}" ${t.id===turmaSelecionada?'selected':''}>${t.nome}</option>`).join('');
 }
 
 function mudarTurmaMapa(id) {
@@ -3242,14 +3611,13 @@ function imprimirMapa() {
   });
 
   // ── Dimensões em mm (A4 paisagem, margem 6mm) ──
-  // Área útil: 297-12 = 285mm largura, 210-12 = 198mm altura
-  // Cabeçalho ~14mm + lousa ~8mm + gaps = ~24mm → grade = ~172mm
-  const pageWmm  = 285;
-  const pageHmm  = 196;
+  // Área útil impressa: 277mm largura (alinhada com @media print width:277mm), 190mm altura
+  const pageWmm  = 277;
+  const pageHmm  = 190;
   const headerMm = 14;
   const lousaMm  = 8;
   const spaceMm  = 4;   // margens internas entre seções
-  const gradeHmm = pageHmm - headerMm - lousaMm - spaceMm * 3;
+  const gradeHmm = pageHmm - headerMm - lousaMm - spaceMm * 2;
   const gradeWmm = pageWmm;
   const gapMm    = 1.2;
 
@@ -3379,11 +3747,24 @@ function imprimirMapa() {
   const fSub     = Math.max(9,  Math.round(fPrimeiro * 1.0));
   const fMeta    = Math.max(7,  Math.round(fNum + 1));
 
+  // Scale automático: se a grade calculada for mais larga que a área, reduz proporcionalmente
+  const gradeRealW = cellW * t.cols + gapMm * (t.cols - 1);
+  const escala = gradeRealW > pageWmm ? pageWmm / (gradeRealW + 4) : 1;
+  // O scale é aplicado num div interno; o wrapper externo mantém dimensões fixas da página
+  // para o browser não gerar página extra
+  const innerW = escala < 1 ? (pageWmm / escala).toFixed(2) : pageWmm;
+  const innerH = escala < 1 ? (pageHmm / escala).toFixed(2) : pageHmm;
+  const scaleStyle = escala < 1
+    ? `transform:scale(${escala.toFixed(4)});transform-origin:top left;`
+    : '';
+
   const area = document.getElementById('area-impressao');
   area.innerHTML = `
+    <div style="width:${pageWmm}mm;height:${pageHmm}mm;overflow:hidden;background:#fff;position:relative;">
     <div style="
       font-family:'Nunito',sans-serif;
-      width:${pageWmm}mm;height:${pageHmm}mm;
+      ${scaleStyle}
+      width:${innerW}mm;height:${innerH}mm;
       display:flex;flex-direction:column;
       background:#fff;box-sizing:border-box;overflow:hidden;">
 
@@ -3394,7 +3775,7 @@ function imprimirMapa() {
         <div>
           <div style="font-size:${fHead}px;font-weight:800;color:#2c3a35;line-height:1.2;
             font-family:'Nunito',sans-serif">
-            🗺️ MapaSala — ${escapeHtml(t.nome)}
+            🗺️ Mapa de Sala — ${escapeHtml(t.nome)}
           </div>
           <div style="font-size:${fSub}px;color:#00a896;font-weight:700;margin-top:0.5mm;
             font-family:'Nunito',sans-serif">
@@ -3435,7 +3816,7 @@ function imprimirMapa() {
         overflow:hidden;flex-shrink:0;">
         ${celulasHtml}
       </div>
-    </div>`;
+    </div></div>`;
 
   // Garantir que a área de prova esteja escondida e sem classe de prova
   document.getElementById('area-impressao-prova').style.display = 'none';
@@ -3539,31 +3920,50 @@ function embaralharProva() {
     toast('Nenhum aluno cadastrado nesta série.', 'error'); return;
   }
 
-  // 2. Embaralhar completamente (mistura todas as turmas)
-  shuffleArr(todosAlunos);
+  // 2. Separar alunos com Laudo/Fixo dos demais
+  const alunosFixos   = todosAlunos.filter(a => a.tipo === 'fixed');
+  const alunosNormais = todosAlunos.filter(a => a.tipo !== 'fixed');
 
-  // 3. Distribuição homogênea: dividir o total pelo número de salas
-  //    Cada sala recebe Math.floor(N/S) ou Math.ceil(N/S) alunos
-  //    de forma que a diferença entre salas seja no máximo 1
+  // Embaralhar apenas os alunos normais
+  shuffleArr(alunosNormais);
+
+  // 3. Distribuição: Laudo/Fixo sempre na Sala 1, demais distribuídos nas outras salas
   const total    = todosAlunos.length;
-  const capTotal = numSalas * capSala;
-  const aAlocar  = Math.min(total, capTotal);
-  const sobras   = total > capTotal ? todosAlunos.slice(capTotal) : [];
 
-  // Quantidade base por sala e quantas salas ganham +1
-  const base  = Math.floor(aAlocar / numSalas);
-  const extra = aAlocar % numSalas; // primeiras `extra` salas recebem base+1
+  // Vagas para normais na sala 1 (o que sobrar após alocar os fixos)
+  const vagasNormaisSala1  = Math.max(0, capSala - alunosFixos.length);
+  // Normais que completam a sala 1
+  const normaisSala1       = alunosNormais.slice(0, vagasNormaisSala1);
+  // Normais que vão para as demais salas
+  const normaisRestantes   = alunosNormais.slice(vagasNormaisSala1);
 
-  const novaAlocacao = [];
-  let cursor = 0;
-  for (let s = 0; s < numSalas; s++) {
-    const qtd = base + (s < extra ? 1 : 0);
-    novaAlocacao.push(todosAlunos.slice(cursor, cursor + qtd));
-    cursor += qtd;
+  // Sobras: fixos que excedem cap da sala 1 + normais que excedem o total restante
+  const capSalasRestantes  = (numSalas - 1) * capSala;
+  const sobrasFixos        = alunosFixos.length > capSala ? alunosFixos.slice(capSala) : [];
+  const sobrasNormais      = normaisRestantes.length > capSalasRestantes ? normaisRestantes.slice(capSalasRestantes) : [];
+  const sobras             = [...sobrasFixos, ...sobrasNormais];
+
+  // Sala 1: fixos + normais complementares (ordenados por nome)
+  const sala1 = [...alunosFixos.slice(0, capSala), ...normaisSala1];
+  sala1.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+  // Distribuição homogênea dos normais restantes pelas demais salas
+  const numSalasRestantes = Math.max(numSalas - 1, 0);
+  const normaisParaDistribuir = normaisRestantes.slice(0, capSalasRestantes);
+  const novaAlocacao = [sala1];
+
+  if (numSalasRestantes > 0) {
+    const base  = Math.floor(normaisParaDistribuir.length / numSalasRestantes);
+    const extra = normaisParaDistribuir.length % numSalasRestantes;
+    let cursor = 0;
+    for (let s = 0; s < numSalasRestantes; s++) {
+      const qtd = base + (s < extra ? 1 : 0);
+      const salaNormal = normaisParaDistribuir.slice(cursor, cursor + qtd);
+      salaNormal.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      novaAlocacao.push(salaNormal);
+      cursor += qtd;
+    }
   }
-
-  // Ordenar cada sala alfabeticamente para facilitar leitura
-  novaAlocacao.forEach(sala => sala.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
 
   provaState.alocacao = novaAlocacao;
   provaTouchSel = null;
@@ -3583,7 +3983,8 @@ function embaralharProva() {
     toast(`⚠️ ${sobras.length} aluno(s) sem sala — capacidade total excedida.`, 'error');
   } else {
     sobraWrap.style.display = 'none';
-    toast(`✅ ${total} alunos distribuídos em ${numSalas} sala(s) de forma homogênea!`);
+    const msgFixos = alunosFixos.length > 0 ? ` | 🔒 ${alunosFixos.length} Laudo/Fixo(s) na Sala 1` : '';
+    toast(`✅ ${total} alunos distribuídos em ${numSalas} sala(s)${msgFixos}`);
   }
 }
 
@@ -3718,33 +4119,44 @@ function imprimirProva() {
     const ocupados   = alunos.length;
     const totalSalas = provaState.alocacao.length;
 
-    // Linhas compactas para caber na página
+    // Linhas compactas — padding adaptativo: quanto mais alunos, menor o padding
+    const rowPad = alunos.length > 38 ? '1px' : alunos.length > 32 ? '2px' : '3px';
+    const sigMT  = alunos.length > 38 ? '6px' : alunos.length > 32 ? '8px' : '10px';
     const linhasHtml = alunos.map((aluno, i) => `
       <tr style="-webkit-print-color-adjust:exact;print-color-adjust:exact;
         background:${i % 2 === 0 ? '#f5f0e8' : '#fdf8f0'}">
-        <td style="padding:3px 8px;font-size:10px;font-weight:700;color:#8fa89e;
+        <td style="padding:${rowPad} 8px;font-size:10px;font-weight:700;color:#8fa89e;
           text-align:center;width:28px;border-bottom:1px solid #e4dcc8">${i + 1}</td>
-        <td style="padding:3px 10px;font-size:10.5px;font-weight:700;color:#2c3a35;
+        <td style="padding:${rowPad} 8px;font-size:10.5px;font-weight:700;color:#2c3a35;
           border-bottom:1px solid #e4dcc8">${escapeHtml(aluno.nome)}</td>
-        <td style="padding:3px 10px;font-size:10px;font-weight:700;color:#007a6e;
-          text-align:center;border-bottom:1px solid #e4dcc8;white-space:nowrap">
+        <td style="padding:${rowPad} 6px;font-size:10px;font-weight:700;color:#007a6e;
+          text-align:center;border-bottom:1px solid #e4dcc8;white-space:nowrap;width:60px">
           ${escapeHtml(aluno.turmaOrigem)}</td>
-        <td style="padding:3px 10px;border-bottom:1px solid #e4dcc8;width:110px">
-          <div style="height:1px;background:#c9bfa8;margin-top:7px"></div>
+        <td style="padding:${rowPad} 6px;border-bottom:1px solid #e4dcc8;width:330px">
+          <div style="height:1px;background:#c9bfa8;margin-top:${sigMT}"></div>
         </td>
       </tr>`
     ).join('');
 
+    // Espaçamentos adaptativos do cabeçalho/rodapé
+    const hdrPB  = alunos.length > 38 ? '3px' : '6px';
+    const hdrMB  = alunos.length > 38 ? '5px' : '10px';
+    const salaP  = alunos.length > 38 ? '4px 14px' : '7px 14px';
+    const thPad  = alunos.length > 38 ? '3px 8px' : '5px 8px';
+    const thPad2 = alunos.length > 38 ? '3px 6px' : '5px 6px';
+    const ftMT   = alunos.length > 38 ? '5px' : '10px';
+    const ftPT   = alunos.length > 38 ? '3px' : '6px';
+
     return `
       <div class="prova-pagina" style="font-family:'Nunito',sans-serif;background:#fff;
-        width:187mm;min-height:258mm;box-sizing:border-box;">
+        width:187mm;box-sizing:border-box;">
 
         <!-- Cabeçalho -->
-        <div style="border-bottom:2px solid #00a896;padding-bottom:6px;margin-bottom:10px;
+        <div style="border-bottom:2px solid #00a896;padding-bottom:${hdrPB};margin-bottom:${hdrMB};
           display:flex;justify-content:space-between;align-items:flex-end">
           <div>
             <div style="font-size:15px;font-weight:800;color:#2c3a35;line-height:1.2">
-              🗺️ MapaSala — Mapa de Prova
+              🗺️ Mapa de Sala — Mapa de Prova
             </div>
             <div style="font-size:11px;color:#00a896;font-weight:700;margin-top:2px">
               ${escapeHtml(provaState.anoSelecionado)}
@@ -3758,7 +4170,7 @@ function imprimirProva() {
 
         <!-- Cabeçalho da sala -->
         <div style="background:linear-gradient(135deg,#007f74,#00c9a7);
-          color:#fff;padding:7px 14px;border-radius:6px 6px 0 0;
+          color:#fff;padding:${salaP};border-radius:6px 6px 0 0;
           display:flex;justify-content:space-between;align-items:center;
           -webkit-print-color-adjust:exact;print-color-adjust:exact">
           <span style="font-size:13px;font-weight:800">🏫 Sala ${numSala}</span>
@@ -3770,26 +4182,26 @@ function imprimirProva() {
           border:1.5px solid #c9bfa8;border-top:none;">
           <thead>
             <tr style="background:#eee8d8;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-              <th style="padding:5px 8px;font-size:9px;font-weight:800;color:#5a7268;
+              <th style="padding:${thPad};font-size:9px;font-weight:800;color:#5a7268;
                 text-transform:uppercase;letter-spacing:0.06em;
                 border-bottom:2px solid #c9bfa8;text-align:center;width:28px">#</th>
-              <th style="padding:5px 10px;font-size:9px;font-weight:800;color:#5a7268;
+              <th style="padding:${thPad};font-size:9px;font-weight:800;color:#5a7268;
                 text-transform:uppercase;letter-spacing:0.06em;
                 border-bottom:2px solid #c9bfa8;text-align:left">Nome do Aluno</th>
-              <th style="padding:5px 10px;font-size:9px;font-weight:800;color:#5a7268;
+              <th style="padding:${thPad2};font-size:9px;font-weight:800;color:#5a7268;
                 text-transform:uppercase;letter-spacing:0.06em;
-                border-bottom:2px solid #c9bfa8;text-align:center">Turma</th>
-              <th style="padding:5px 10px;font-size:9px;font-weight:800;color:#5a7268;
+                border-bottom:2px solid #c9bfa8;text-align:center;width:60px">Turma</th>
+              <th style="padding:${thPad2};font-size:9px;font-weight:800;color:#5a7268;
                 text-transform:uppercase;letter-spacing:0.06em;
-                border-bottom:2px solid #c9bfa8;text-align:left;width:110px">Assinatura</th>
+                border-bottom:2px solid #c9bfa8;text-align:left;width:330px">Assinatura</th>
             </tr>
           </thead>
           <tbody>${linhasHtml}</tbody>
         </table>
 
         <!-- Rodapé -->
-        <div style="margin-top:10px;display:flex;justify-content:space-between;
-          font-size:9px;color:#8fa89e;border-top:1px solid #e4dcc8;padding-top:6px">
+        <div style="margin-top:${ftMT};display:flex;justify-content:space-between;
+          font-size:9px;color:#8fa89e;border-top:1px solid #e4dcc8;padding-top:${ftPT}">
           <span>Professor(a): _______________________________</span>
           <span>Data: _____ / _____ / _________</span>
         </div>
@@ -4037,6 +4449,24 @@ function importarDados(ev) {
   ev.target.value = '';
 }
 
+// ── Tipos padrão (imutáveis) ──
+const TIPOS_PADRAO = [
+  { id: 'normal', label: 'Normal',         emoji: '👤', cor: '#00a896', padrao: true },
+  { id: 'fixed',  label: 'Laudo / Fixo',   emoji: '🔒', cor: '#e05c5c', padrao: true },
+  { id: 'vision', label: 'Visão',          emoji: '👁️', cor: '#00b88a', padrao: true },
+  { id: 'conc',   label: 'Concentração',   emoji: '💛', cor: '#d4891a', padrao: true },
+];
+function getTiposCustom() {
+  try { return JSON.parse(localStorage.getItem('mapasala_tipos_custom') || '[]'); }
+  catch(e) { return []; }
+}
+function setTiposCustom(arr) {
+  localStorage.setItem('mapasala_tipos_custom', JSON.stringify(arr));
+}
+function getTodosTipos() {
+  return [...TIPOS_PADRAO, ...getTiposCustom()];
+}
+
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
@@ -4052,25 +4482,6 @@ setTimeout(iniciarSyncFirebase, 800);
 // ═══════════════════════════════════════════
 // CONFIGURAÇÕES
 // ═══════════════════════════════════════════
-
-// ── Tipos padrão (imutáveis) ──
-const TIPOS_PADRAO = [
-  { id: 'normal', label: 'Normal',         emoji: '👤', cor: '#00a896', padrao: true },
-  { id: 'fixed',  label: 'Laudo / Fixo',   emoji: '🔒', cor: '#e05c5c', padrao: true },
-  { id: 'vision', label: 'Visão',          emoji: '👁️', cor: '#00b88a', padrao: true },
-  { id: 'conc',   label: 'Concentração',   emoji: '💛', cor: '#d4891a', padrao: true },
-];
-
-function getTiposCustom() {
-  try { return JSON.parse(localStorage.getItem('mapasala_tipos_custom') || '[]'); }
-  catch(e) { return []; }
-}
-function setTiposCustom(arr) {
-  localStorage.setItem('mapasala_tipos_custom', JSON.stringify(arr));
-}
-function getTodosTipos() {
-  return [...TIPOS_PADRAO, ...getTiposCustom()];
-}
 
 // ── Render lista de tipos na aba config ──
 function renderConfigTipos() {
@@ -4196,45 +4607,7 @@ function atualizarSelectSalasProva(salasPadrao, capPadrao, maxSalas) {
   if (capEl && !capEl._editado) capEl.value = capPadrao;
 }
 
-// ── Trocar senha ──
-function trocarSenha() {
-  const atual    = document.getElementById('cfg-senha-atual').value;
-  const nova     = document.getElementById('cfg-senha-nova').value;
-  const confirma = document.getElementById('cfg-senha-confirma').value;
-  const msgEl    = document.getElementById('cfg-senha-msg');
 
-  const senhaAtualSalva = localStorage.getItem('mapasala_senha_custom') || atob('QXJlbmExMjM=');
-
-  const mostrarMsg = (txt, ok) => {
-    msgEl.style.display = 'block';
-    msgEl.textContent = txt;
-    msgEl.style.color      = ok ? '#007a6e' : '#b83a3a';
-    msgEl.style.background = ok ? 'rgba(0,168,150,0.10)' : 'rgba(224,92,92,0.10)';
-    msgEl.style.border     = ok ? '1px solid rgba(0,168,150,0.25)' : '1px solid rgba(224,92,92,0.25)';
-  };
-
-  if (!atual) { mostrarMsg('❌ Informe a senha atual.', false); return; }
-  if (atual !== senhaAtualSalva) { mostrarMsg('❌ Senha atual incorreta.', false); return; }
-  if (!nova || nova.length < 4) { mostrarMsg('❌ A nova senha precisa ter pelo menos 4 caracteres.', false); return; }
-  if (nova !== confirma) { mostrarMsg('❌ As senhas não coincidem.', false); return; }
-
-  localStorage.setItem('mapasala_senha_custom', nova);
-  document.getElementById('cfg-senha-atual').value    = '';
-  document.getElementById('cfg-senha-nova').value     = '';
-  document.getElementById('cfg-senha-confirma').value = '';
-  mostrarMsg('✅ Senha alterada com sucesso!', true);
-  toast('Senha atualizada! 🔑');
-  setTimeout(() => { msgEl.style.display = 'none'; }, 4000);
-}
-
-// (fazerLogin já declarado acima — usa senha custom via getSenhaAtual)
-
-// ── Toggle visibilidade senha ──
-function toggleVisPass(inputId, btn) {
-  const inp = document.getElementById(inputId);
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
-  else { inp.type = 'password'; btn.textContent = '👁️'; }
-}
 
 // ── Tema claro/escuro ──
 function aplicarTema(tema) {
@@ -4363,7 +4736,7 @@ if (isIos && !isInStandaloneMode) {
   box-shadow:0 -4px 24px rgba(0,0,0,0.12)">
   <img src="icons/icon-192.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0">
   <div style="flex:1;font-size:0.85rem">
-    <strong>Instalar MapaSala</strong><br>
+    <strong>Instalar Mapa de Sala</strong><br>
     <span style="color:var(--text2)">Toque em <strong>⎙</strong> e depois <strong>"Adicionar à Tela de Início"</strong></span>
   </div>
   <button onclick="document.getElementById('ios-install-banner').style.display='none'"
